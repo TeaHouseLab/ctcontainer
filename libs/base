@@ -1,0 +1,26 @@
+function checkdependence
+  if test -e $argv
+    echo -e "\033[32m[checkdependence]check passed - $argv exist\033[0m"
+  else
+    echo -e "\033[0;31m[checkdependence]check failed - plz install $argv\033[0m"
+    exit
+  end
+end
+function checknetwork
+  if curl -s -L $argv[1] | grep -q $argv[2]
+    echo -e "\033[32m[checknetwork]check passed - u`ve connected to $argv[1]\033[0m"
+  else
+    echo -e "\033[0;31m[checknetwork]check failed - check your network connection\033[0m"
+  end
+end
+function dir_exist
+  if test -d $argv[1]
+    echo -e "\033[32m[checkdir]check passed - dir $argv[1] exist\033[0m"
+  else
+    echo -e "\033[0;31m[checkdir]check failed - dir $argv[1] doesn't exist,going to makr one\033[0m"
+    mkdir $argv[1]
+  end
+end
+function list_menu
+ls $argv | sed '\~//~d'
+end

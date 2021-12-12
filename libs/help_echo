@@ -1,0 +1,19 @@
+function help_echo
+  echo "==========Help Documentation=========="
+  set_color green
+  echo "(./)app argv[1]"
+  set_color normal
+  echo " -argv[1]:the command to execute"
+  echo "  -Available:
+
+        run argv[2] argv[3] >>> Run command in chroot
+        argv[2]: the code of container
+        argv[3]: the executable in chroot
+
+        init argv[2] >>> Create a container
+        argv[2]: debian,debian-testing,debian-unstable,alpinelinux
+
+        purge argv[2] >>> Destroy a container
+        argv[2]: debian,debian-testing,debian-unstable,alpinelinux"
+  echo "======================================"
+end
