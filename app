@@ -35,6 +35,27 @@ set installname $argv[1]
   echo "$prefix Removed"
   set_color normal
 end
+function ctconfig_init
+set_color red
+echo "$prefix Detected First Launching,We need your password to create the config file"
+set_color normal
+sudo sh -c "echo "ctcontainer_root=/opt/ctcontainer/" > /etc/centerlinux/conf.d/ctcontainer.conf"
+sudo sh -c "echo "ctcontainer_share=$HOME/ctcontainer_share" >> /etc/centerlinux/conf.d/ctcontainer.conf"
+end
+function setup_user_share
+set container $argv[1]
+if test -d $ctcontainer_share
+else
+  mkdir -p $ctcontainer_share
+end
+if test -d $ctcontainer_root/$container/ctcontainer_share
+else
+  sudo mkdir -p $ctcontainer_root/$container/ctcontainer_share
+end
+set_color cyan
+set_color normal
+sudo mount --bind $ctcontainer_share $ctcontainer_root/$container/ctcontainer_share
+end
 function purge
 set container $argv[1]
 cd /opt/ctcontainer/
@@ -49,31 +70,33 @@ else
 end
 end
 function run
-echo "$prefix Launching..."
 set container $argv[1]
-set program $argv[2]
-cd /opt/ctcontainer/
-sudo mount --bind /dev /opt/ctcontainer/$container/dev
-sudo mount --bind /proc /opt/ctcontainer/$container/proc
-sudo mount --bind /sys /opt/ctcontainer/$container/sys
-sudo chroot $container $program
-sudo umount --recursive /opt/ctcontainer/$container/dev
-sudo umount --recursive /opt/ctcontainer/$container/proc
-sudo umount --recursive /opt/ctcontainer/$container/sys
+echo "$prefix [info] Launching $container from $ctcontainer_root"
+setup_user_share $container
+cd $ctcontainer_root
+sudo mount --bind -o ro /dev $ctcontainer_root/$container/dev
+sudo mount --bind -o ro /proc $ctcontainer_root/$container/proc
+sudo mount --bind -o ro /sys $ctcontainer_root/$container/sys
+sudo mount --bind -o ro /dev/pts $ctcontainer_root/$container/dev/pts
+sudo chroot $container $argv[2..-1]
+sudo umount --recursive $ctcontainer_root/$container/dev
+sudo umount --recursive $ctcontainer_root/$container/proc
+sudo umount --recursive $ctcontainer_root/$container/sys
+sudo umount --recursive $ctcontainer_root/$container/ctcontainer_share
 end
 function init
 set container $argv[1]
 set_color yellow
 echo "$prefix Deploying..."
-cd /opt
+cd $ctcontainer_root
 if sudo -E curl -s -L -o $container.tar.gz https://github.com/TeaHouseLab/FileCloud/releases/download/ctcontainer/$container.tar.gz
-  sudo mkdir -p ctcontainer/$container
-  sudo mv $container.tar.gz ctcontainer/$container
-  cd ctcontainer/$container
+  sudo mkdir -p $container
+  sudo mv $container.tar.gz $container
+  cd $container
   sudo tar xf $container.tar.gz
   sudo sh -c "echo 'nameserver 8.8.8.8' > etc/resolv.conf"
   set_color green
-  echo "$prefix $container deployed in /opt/ctcontainer/$container"
+  echo "$prefix $container deployed in $ctcontainer_root/$container"
   set_color normal
 else
   set_color red
@@ -81,15 +104,29 @@ else
   set_color normal
 end
 end
-echo Build_Time_UTC=2021-12-12_06:55:50
+echo Build_Time_UTC=2021-12-17_15:52:41
 set prefix [ctcontainer]
+if test -d /etc/centerlinux/conf.d/
+else
+  sudo mkdir -p /etc/centerlinux/conf.d/
+end
+if test -e /etc/centerlinux/conf.d/ctcontainer.conf
+  set ctcontainer_root (sed -n '/ctcontainer_root=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/ctcontainer_root=//g')
+  set ctcontainer_share (sed -n '/ctcontainer_share=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/ctcontainer_share=//g')
+  set_color yellow
+  echo "$prefix [debug] set root.ctcontainer -> $ctcontainer_root"
+  echo "$prefix [debug] set share.ctcontainer -> $ctcontainer_share"
+  set_color normal
+else
+  ctconfig_init
+end
 switch $argv[1]
 case purge
   purge $argv[1]
 case init
   init $argv[2]
 case run
-  run $argv[2] $argv[3]
+  run $argv[2] $argv[3..-1]
 case v version
   set_color yellow
   echo "FrostFlower@build0"
