@@ -17,7 +17,7 @@ switch $argv[1]
 case purge
   purge $argv[2]
 case init
-  init $argv[2]
+  init $argv[2] $argv[3..-1]
 case run
   run $argv[2] $argv[3..-1]
 case list
