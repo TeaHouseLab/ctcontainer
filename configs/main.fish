@@ -15,11 +15,13 @@ else
 end
 switch $argv[1]
 case purge
-  purge $argv[1]
+  purge $argv[2]
 case init
   init $argv[2]
 case run
   run $argv[2] $argv[3..-1]
+case list
+  list
 case v version
   set_color yellow
   echo "FrostFlower@build0"
