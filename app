@@ -178,7 +178,7 @@ else
   set_color normal
 end
 end
-echo Build_Time_UTC=2021-12-18_05:27:00
+echo Build_Time_UTC=2021-12-18_11:28:20
 set prefix [ctcontainer]
 if test -d /etc/centerlinux/conf.d/
 else
@@ -193,6 +193,13 @@ if test -e /etc/centerlinux/conf.d/ctcontainer.conf
   set_color normal
 else
   ctconfig_init
+end
+if test -d $ctcontainer_root
+else
+  set_color red
+  echo "$prefix [error] root.ctcontainer not found,try to create it under root"
+  set_color normal
+  sudo mkdir -p $ctcontainer_root
 end
 switch $argv[1]
 case purge

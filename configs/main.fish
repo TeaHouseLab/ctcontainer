@@ -13,6 +13,13 @@ if test -e /etc/centerlinux/conf.d/ctcontainer.conf
 else
   ctconfig_init
 end
+if test -d $ctcontainer_root
+else
+  set_color red
+  echo "$prefix [error] root.ctcontainer not found,try to create it under root"
+  set_color normal
+  sudo mkdir -p $ctcontainer_root
+end
 switch $argv[1]
 case purge
   purge $argv[2]
