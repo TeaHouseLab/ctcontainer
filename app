@@ -104,6 +104,12 @@ cd $ctcontainer_root
 end
 function run
 set container $argv[1]
+if [ "$argv[2..-1]" = "" ]
+  set_color red
+  echo "$prefix [error] Nothing to run,abort"
+  set_color normal
+  exit
+end
 echo "$prefix [info] Launching $container from $ctcontainer_root"
 setup_user_share $container
 setup_user_xorg $container
@@ -135,10 +141,10 @@ end
 sudo mount -o bind /tmp/.X11-unix $ctcontainer_root/$container/tmp/.X11-unix
 end
 function list
-echo "Available"
+echo ">Available<"
 curl -s -L https://github.com/TeaHouseLab/FileCloud/releases/download/ctcontainer/available
 echo
-echo "Installed"
+echo ">Installed<"
 list_menu $ctcontainer_root
 end
 function init
@@ -179,7 +185,7 @@ else
   set_color normal
 end
 end
-echo Build_Time_UTC=2021-12-18_12:47:14
+echo Build_Time_UTC=2021-12-18_13:10:45
 set prefix [ctcontainer]
 if test -d /etc/centerlinux/conf.d/
 else
