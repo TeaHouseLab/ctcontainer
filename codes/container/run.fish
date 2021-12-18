@@ -1,5 +1,11 @@
 function run
 set container $argv[1]
+if [ "$argv[2..-1]" = "" ]
+  set_color red
+  echo "$prefix [error] Nothing to run,abort"
+  set_color normal
+  exit
+end
 echo "$prefix [info] Launching $container from $ctcontainer_root"
 setup_user_share $container
 setup_user_xorg $container

@@ -1,7 +1,7 @@
 function list
-echo "Available"
+echo ">Available<"
 curl -s -L https://github.com/TeaHouseLab/FileCloud/releases/download/ctcontainer/available
 echo
-echo "Installed"
+echo ">Installed<"
 list_menu $ctcontainer_root
 end
