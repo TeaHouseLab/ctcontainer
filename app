@@ -33,8 +33,12 @@ function help_echo
   echo " -argv[1]:the command to execute"
   echo "  -Available:
         list >>> list installed container
-        
+
         run argv[2] argv[3] >>> Run command in chroot
+        argv[2]: the code of container
+        argv[3]: the executable in chroot
+
+        frun argv[2] argv[3] >>> Run command in chroot,but all bind mount is readable and writable,more dangerous
         argv[2]: the code of container
         argv[3]: the executable in chroot
 
@@ -115,16 +119,42 @@ echo "$prefix [info] Launching $container from $ctcontainer_root"
 setup_user_share $container
 setup_user_xorg $container
 cd $ctcontainer_root
+if grep -qs "$ctcontainer_root/$container/dev" /proc/mounts
+else
 sudo mount -o bind,ro /dev $ctcontainer_root/$container/dev
-sudo mount -o bind,ro /proc $ctcontainer_root/$container/proc
-sudo mount -o bind,ro /sys $ctcontainer_root/$container/sys
+end
+if grep -qs "$ctcontainer_root/$container/dev/pts" /proc/mounts
+else
 sudo mount -o bind /dev/pts $ctcontainer_root/$container/dev/pts
+end
+if grep -qs "$ctcontainer_root/$container/proc" /proc/mounts
+else
+sudo mount -o bind,ro /proc $ctcontainer_root/$container/proc
+end
+if grep -qs "$ctcontainer_root/$container/sys" /proc/mounts
+else
+sudo mount -o bind,ro /sys $ctcontainer_root/$container/sys
+end
 sudo chroot $container env DISPLAY=:0 $argv[2..-1]
-sudo umount --recursive -f -l $ctcontainer_root/$container/dev
-sudo umount --recursive -f -l $ctcontainer_root/$container/proc
-sudo umount --recursive -f -l $ctcontainer_root/$container/sys
-sudo umount --recursive -f -l $ctcontainer_root/$container/tmp/.X11-unix
-sudo umount --recursive -f -l $ctcontainer_root/$container/ctcontainer_share
+set_color yellow
+echo "$prefix [warn] Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
+set_color normal
+read -n1 -P "$prefix >>> " _umount_
+  switch $_umount_
+  case y Y
+    sudo umount -f -l $ctcontainer_root/$container/dev
+    sudo umount -f -l $ctcontainer_root/$container/proc
+    sudo umount -f -l $ctcontainer_root/$container/sys
+    sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
+    sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
+    set_color green
+    echo "$prefix [info] Umountd"
+    set_color normal
+  case n N
+    set_color green
+    echo "$prefix [info] I'm not going to umount it,exit chroot only"
+    set_color normal
+  end
 end
 function setup_user_xorg
 set container $argv[1]
@@ -139,7 +169,56 @@ else
   echo "$prefix [error] Xhost not found,xorg in container couldn't be set up,still try to mount the .X11-unix directory"
   set_color normal
 end
-sudo mount -o bind /tmp/.X11-unix $ctcontainer_root/$container/tmp/.X11-unix
+sudo mount -o rbind /tmp/.X11-unix $ctcontainer_root/$container/tmp/.X11-unix
+end
+function frun
+set container $argv[1]
+if [ "$argv[2..-1]" = "" ]
+  set_color red
+  echo "$prefix [error] Nothing to run,abort"
+  set_color normal
+  exit
+end
+echo "$prefix [info] Launching $container from $ctcontainer_root"
+setup_user_share $container
+setup_user_xorg $container
+cd $ctcontainer_root
+if grep -qs "$ctcontainer_root/$container/dev" /proc/mounts
+else
+sudo mount -o bind /dev $ctcontainer_root/$container/dev
+end
+if grep -qs "$ctcontainer_root/$container/dev/pts" /proc/mounts
+else
+sudo mount -o bind /dev/pts $ctcontainer_root/$container/dev/pts
+end
+if grep -qs "$ctcontainer_root/$container/proc" /proc/mounts
+else
+sudo mount -o bind /proc $ctcontainer_root/$container/proc
+end
+if grep -qs "$ctcontainer_root/$container/sys" /proc/mounts
+else
+sudo mount -o bind /sys $ctcontainer_root/$container/sys
+end
+sudo chroot $container env DISPLAY=:0 $argv[2..-1]
+set_color yellow
+echo "$prefix [warn] Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
+set_color normal
+read -n1 -P "$prefix >>> " _umount_
+  switch $_umount_
+  case y Y
+    sudo umount -f -l $ctcontainer_root/$container/dev
+    sudo umount -f -l $ctcontainer_root/$container/proc
+    sudo umount -f -l $ctcontainer_root/$container/sys
+    sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
+    sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
+    set_color green
+    echo "$prefix [info] Umountd"
+    set_color normal
+  case n N
+    set_color green
+    echo "$prefix [info] I'm not going to umount it,exit chroot only"
+    set_color normal
+  end
 end
 function list
 echo ">Available<"
@@ -155,7 +234,7 @@ set_color yellow
 echo "$prefix Deploying..."
 set_color normal
 cd $ctcontainer_root
-if echo $argv[2..-1] | grep -q -i '\-f'
+if echo $argv[2] | grep -q -i '\-f'
   set_color cyan
   echo "$prefix [Info] Using origin name mode,container might be killed(coverd)"
   set_color normal
@@ -175,18 +254,23 @@ if sudo -E curl -s -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer
   sudo mkdir -p $containername
   sudo mv $container.tar.gz $containername
   cd $containername
-  sudo tar xf $container.tar.gz
+  if sudo tar xf $container.tar.gz
   sudo sh -c "echo 'nameserver 8.8.8.8' > etc/resolv.conf"
   set_color green
   echo "$prefix $container deployed in $ctcontainer_root/$containername"
   set_color normal
+  else
+  set_color red
+  echo "$prefix [error] Check your network and the name of container(use ctcontainer list to see all available distros)"
+  set_color normal
+  end
 else
   set_color red
   echo "$prefix Failed,check your network connective"
   set_color normal
 end
 end
-echo Build_Time_UTC=2021-12-18_13:16:42
+echo Build_Time_UTC=2021-12-18_15:27:52
 set prefix [ctcontainer]
 if test -d /etc/centerlinux/conf.d/
 else
@@ -213,14 +297,16 @@ switch $argv[1]
 case purge
   purge $argv[2..-1]
 case init
-  init $argv[2] $argv[3..-1]
+  init $argv[2] $argv[3]
 case run
   run $argv[2] $argv[3..-1]
+case frun
+  frun $argv[2] $argv[3..-1]
 case list
   list
 case v version
   set_color yellow
-  echo "FrostFlower@build1"
+  echo "FrostFlower@build2"
   set_color normal
 case install
   install ctcontainer

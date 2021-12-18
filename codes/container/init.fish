@@ -5,7 +5,7 @@ set_color yellow
 echo "$prefix Deploying..."
 set_color normal
 cd $ctcontainer_root
-if echo $argv[2..-1] | grep -q -i '\-f'
+if echo $argv[2] | grep -q -i '\-f'
   set_color cyan
   echo "$prefix [Info] Using origin name mode,container might be killed(coverd)"
   set_color normal
@@ -25,11 +25,16 @@ if sudo -E curl -s -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer
   sudo mkdir -p $containername
   sudo mv $container.tar.gz $containername
   cd $containername
-  sudo tar xf $container.tar.gz
+  if sudo tar xf $container.tar.gz
   sudo sh -c "echo 'nameserver 8.8.8.8' > etc/resolv.conf"
   set_color green
   echo "$prefix $container deployed in $ctcontainer_root/$containername"
   set_color normal
+  else
+  set_color red
+  echo "$prefix [error] Check your network and the name of container(use ctcontainer list to see all available distros)"
+  set_color normal
+  end
 else
   set_color red
   echo "$prefix Failed,check your network connective"

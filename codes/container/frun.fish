@@ -1,4 +1,4 @@
-function run
+function frun
 set container $argv[1]
 if [ "$argv[2..-1]" = "" ]
   set_color red
@@ -12,7 +12,7 @@ setup_user_xorg $container
 cd $ctcontainer_root
 if grep -qs "$ctcontainer_root/$container/dev" /proc/mounts
 else
-sudo mount -o bind,ro /dev $ctcontainer_root/$container/dev
+sudo mount -o bind /dev $ctcontainer_root/$container/dev
 end
 if grep -qs "$ctcontainer_root/$container/dev/pts" /proc/mounts
 else
@@ -20,11 +20,11 @@ sudo mount -o bind /dev/pts $ctcontainer_root/$container/dev/pts
 end
 if grep -qs "$ctcontainer_root/$container/proc" /proc/mounts
 else
-sudo mount -o bind,ro /proc $ctcontainer_root/$container/proc
+sudo mount -o bind /proc $ctcontainer_root/$container/proc
 end
 if grep -qs "$ctcontainer_root/$container/sys" /proc/mounts
 else
-sudo mount -o bind,ro /sys $ctcontainer_root/$container/sys
+sudo mount -o bind /sys $ctcontainer_root/$container/sys
 end
 sudo chroot $container env DISPLAY=:0 $argv[2..-1]
 set_color yellow
