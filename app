@@ -84,22 +84,23 @@ set_color normal
 sudo mount --bind $ctcontainer_share $ctcontainer_root/$container/ctcontainer_share
 end
 function purge
-set container $argv[1]
-cd $ctcontainer_root
-  if test -d $container
-    if sudo rm -rf $container
-      set_color green
-      echo "$prefix Purged $container"
-      set_color normal
+  for container in $argv[1..-1]
+  cd $ctcontainer_root
+    if test -d $container
+      if sudo rm -rf $container
+        set_color green
+        echo "$prefix Purged $container"
+        set_color normal
+      else
+        set_color red
+        echo "$prefix Ouch!Something went wrong at {ctcontainer.purge.rm}"
+        set_color normal
+      end
     else
       set_color red
-      echo "$prefix Ouch!Something went wrong at {ctcontainer.purge.rm}"
+      echo "$prefix [error]No such container in root.ctcontainer"
       set_color normal
     end
-  else
-    set_color red
-    echo "$prefix [error]No such container in root.ctcontainer"
-    set_color normal
   end
 end
 function run
@@ -185,7 +186,7 @@ else
   set_color normal
 end
 end
-echo Build_Time_UTC=2021-12-18_13:10:45
+echo Build_Time_UTC=2021-12-18_13:16:42
 set prefix [ctcontainer]
 if test -d /etc/centerlinux/conf.d/
 else
@@ -210,7 +211,7 @@ else
 end
 switch $argv[1]
 case purge
-  purge $argv[2]
+  purge $argv[2..-1]
 case init
   init $argv[2] $argv[3..-1]
 case run

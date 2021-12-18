@@ -22,7 +22,7 @@ else
 end
 switch $argv[1]
 case purge
-  purge $argv[2]
+  purge $argv[2..-1]
 case init
   init $argv[2] $argv[3..-1]
 case run
