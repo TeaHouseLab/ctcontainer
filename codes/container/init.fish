@@ -18,7 +18,7 @@ else
   set containername $container$initraid
   end
 end
-if sudo -E curl -s -L -o $container.tar.gz https://github.com/TeaHouseLab/FileCloud/releases/download/ctcontainer/$container.tar.gz
+if sudo -E curl -s -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer/$container.tar.gz
   set_color green
   echo "$prefix $container Package downloaded"
   set_color normal
