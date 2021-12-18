@@ -11,8 +11,8 @@ if echo $argv[2..-1] | grep -q -i '\-f'
   set_color normal
 else
   while test -d $container$initraid
-  set_color red
-  echo "$prefix [warning] The random container name has existed,generating a new one"
+  set_color yellow
+  echo "$prefix [info] The random container name has existed,generating a new one"
   set_color normal
   set initraid (random 1000 1 9999)
   set containername $container$initraid

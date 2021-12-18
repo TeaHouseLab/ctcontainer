@@ -85,31 +85,54 @@ sudo mount --bind $ctcontainer_share $ctcontainer_root/$container/ctcontainer_sh
 end
 function purge
 set container $argv[1]
-cd /opt/ctcontainer/
-if sudo rm -rf $container
-  set_color green
-  echo "$prefix Purged $container"
-  set_color normal
-else
-  set_color red
-  echo "$prefix Ouch!Something went wrong at {ctcontainer.purge.rm}"
-  set_color normal
-end
+cd $ctcontainer_root
+  if test -d $container
+    if sudo rm -rf $container
+      set_color green
+      echo "$prefix Purged $container"
+      set_color normal
+    else
+      set_color red
+      echo "$prefix Ouch!Something went wrong at {ctcontainer.purge.rm}"
+      set_color normal
+    end
+  else
+    set_color red
+    echo "$prefix [error]No such container in root.ctcontainer"
+    set_color normal
+  end
 end
 function run
 set container $argv[1]
 echo "$prefix [info] Launching $container from $ctcontainer_root"
 setup_user_share $container
+setup_user_xorg $container
 cd $ctcontainer_root
 sudo mount -o bind,ro /dev $ctcontainer_root/$container/dev
 sudo mount -o bind,ro /proc $ctcontainer_root/$container/proc
 sudo mount -o bind,ro /sys $ctcontainer_root/$container/sys
 sudo mount -o bind /dev/pts $ctcontainer_root/$container/dev/pts
-sudo chroot $container $argv[2..-1]
-sudo umount --recursive $ctcontainer_root/$container/dev
-sudo umount --recursive $ctcontainer_root/$container/proc
-sudo umount --recursive $ctcontainer_root/$container/sys
-sudo umount --recursive $ctcontainer_root/$container/ctcontainer_share
+sudo chroot $container env DISPLAY=:0 $argv[2..-1]
+sudo umount --recursive -f -l $ctcontainer_root/$container/dev
+sudo umount --recursive -f -l $ctcontainer_root/$container/proc
+sudo umount --recursive -f -l $ctcontainer_root/$container/sys
+sudo umount --recursive -f -l $ctcontainer_root/$container/tmp/.X11-unix
+sudo umount --recursive -f -l $ctcontainer_root/$container/ctcontainer_share
+end
+function setup_user_xorg
+set container $argv[1]
+if test -d $ctcontainer_root/$container/tmp/.X11-unix
+else
+  sudo mkdir -p $ctcontainer_root/$container/tmp/.X11-unix
+end
+if command -q -v xhost
+  xhost +local:
+else
+  set_color red
+  echo "$prefix [error] Xhost not found,xorg in container couldn't be set up,still try to mount the .X11-unix directory"
+  set_color normal
+end
+sudo mount -o bind /tmp/.X11-unix $ctcontainer_root/$container/tmp/.X11-unix
 end
 function list
 curl -s -L https://github.com/TeaHouseLab/FileCloud/releases/download/ctcontainer/available
@@ -130,8 +153,8 @@ if echo $argv[2..-1] | grep -q -i '\-f'
   set_color normal
 else
   while test -d $container$initraid
-  set_color red
-  echo "$prefix [warning] The random container name has existed,generating a new one"
+  set_color yellow
+  echo "$prefix [info] The random container name has existed,generating a new one"
   set_color normal
   set initraid (random 1000 1 9999)
   set containername $container$initraid
@@ -155,7 +178,7 @@ else
   set_color normal
 end
 end
-echo Build_Time_UTC=2021-12-17_17:02:55
+echo Build_Time_UTC=2021-12-18_05:24:09
 set prefix [ctcontainer]
 if test -d /etc/centerlinux/conf.d/
 else
