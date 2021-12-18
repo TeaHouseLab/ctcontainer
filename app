@@ -178,7 +178,7 @@ else
   set_color normal
 end
 end
-echo Build_Time_UTC=2021-12-18_05:24:09
+echo Build_Time_UTC=2021-12-18_05:27:00
 set prefix [ctcontainer]
 if test -d /etc/centerlinux/conf.d/
 else
@@ -205,7 +205,7 @@ case list
   list
 case v version
   set_color yellow
-  echo "FrostFlower@build0"
+  echo "FrostFlower@build1"
   set_color normal
 case install
   install ctcontainer
