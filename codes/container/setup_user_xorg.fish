@@ -11,5 +11,5 @@ else
   echo "$prefix [error] Xhost not found,xorg in container couldn't be set up,still try to mount the .X11-unix directory"
   set_color normal
 end
-sudo mount -o bind /tmp/.X11-unix $ctcontainer_root/$container/tmp/.X11-unix
+sudo mount -o rbind /tmp/.X11-unix $ctcontainer_root/$container/tmp/.X11-unix
 end

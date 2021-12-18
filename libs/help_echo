@@ -6,8 +6,12 @@ function help_echo
   echo " -argv[1]:the command to execute"
   echo "  -Available:
         list >>> list installed container
-        
+
         run argv[2] argv[3] >>> Run command in chroot
+        argv[2]: the code of container
+        argv[3]: the executable in chroot
+
+        frun argv[2] argv[3] >>> Run command in chroot,but all bind mount is readable and writable,more dangerous
         argv[2]: the code of container
         argv[3]: the executable in chroot
 

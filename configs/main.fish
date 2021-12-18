@@ -24,14 +24,16 @@ switch $argv[1]
 case purge
   purge $argv[2..-1]
 case init
-  init $argv[2] $argv[3..-1]
+  init $argv[2] $argv[3]
 case run
   run $argv[2] $argv[3..-1]
+case frun
+  frun $argv[2] $argv[3..-1]
 case list
   list
 case v version
   set_color yellow
-  echo "FrostFlower@build1"
+  echo "FrostFlower@build2"
   set_color normal
 case install
   install ctcontainer
