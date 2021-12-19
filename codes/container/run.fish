@@ -27,10 +27,20 @@ else
 sudo mount -o bind,ro /sys $ctcontainer_root/$container/sys
 end
 sudo chroot $container env DISPLAY=:0 $argv[2..-1]
-set_color yellow
-echo "$prefix [warn] Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
-set_color normal
-read -n1 -P "$prefix >>> " _umount_
+if [ "$autoumount" = "true" ]
+  sudo umount -f -l $ctcontainer_root/$container/dev
+  sudo umount -f -l $ctcontainer_root/$container/proc
+  sudo umount -f -l $ctcontainer_root/$container/sys
+  sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
+  sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
+  set_color green
+  echo "$prefix [info] Umountd"
+  set_color normal
+else
+  set_color yellow
+  echo "$prefix [warn] Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
+  set_color normal
+  read -n1 -P "$prefix >>> " _umount_
   switch $_umount_
   case y Y '*'
     sudo umount -f -l $ctcontainer_root/$container/dev
@@ -46,4 +56,5 @@ read -n1 -P "$prefix >>> " _umount_
     echo "$prefix [info] I'm not going to umount it,exit chroot only"
     set_color normal
   end
+end
 end
