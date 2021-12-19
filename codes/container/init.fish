@@ -1,6 +1,12 @@
 function init
 set container $argv[1]
 set containername $container
+if [ "$containername" = "" ]
+  set_color red
+  echo "$prefix [error] Nothing to init,abort"
+  set_color normal
+  exit
+end
 set_color yellow
 echo "$prefix Deploying..."
 set_color normal
@@ -31,6 +37,7 @@ if sudo -E curl -s -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer
   echo "$prefix $container deployed in $ctcontainer_root/$containername"
   set_color normal
   else
+  sudo rm -rf $ctcontainer_root/$containername
   set_color red
   echo "$prefix [error] Check your network and the name of container(use ctcontainer list to see all available distros)"
   set_color normal

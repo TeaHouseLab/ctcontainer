@@ -33,7 +33,7 @@ case list
   list
 case v version
   set_color yellow
-  echo "FrostFlower@build2"
+  echo "FrostFlower@build3"
   set_color normal
 case install
   install ctcontainer
