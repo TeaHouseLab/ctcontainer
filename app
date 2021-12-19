@@ -34,15 +34,23 @@ function help_echo
   echo "  -Available:
         list >>> list installed container
 
-        run argv[2] argv[3] >>> Run command in chroot
+        run argv[2] argv[3] (add -u here if you want it to auto umount) >>> Run command in chroot
         argv[2]: the code of container
         argv[3]: the executable in chroot
 
-        frun argv[2] argv[3] >>> Run command in chroot,but all bind mount is readable and writable,more dangerous
+        run-u argv[2] argv[3] (add -u here if you want it to auto umount) >>> Run command in chroot,and auto umount
         argv[2]: the code of container
         argv[3]: the executable in chroot
 
-        init argv[2] >>> Create a container
+        frun argv[2] argv[3] (add -u here if you want it to auto umount) >>> Run command in chroot,but all bind mount is readable and writable,more dangerous
+        argv[2]: the code of container
+        argv[3]: the executable in chroot
+
+        frun-u argv[2] argv[3] (add -u here if you want it to auto umount) >>> Run command in chroot,and auto umount,but all bind mount is readable and writable,more dangerous
+        argv[2]: the code of container
+        argv[3]: the executable in chroot
+
+        init argv[2] (-f if you don't want the random container code) >>> Create a container
         argv[2]: debian,debian-testing,debian-unstable,alpinelinux
 
         purge argv[2] >>> Destroy a container
@@ -136,10 +144,20 @@ else
 sudo mount -o bind,ro /sys $ctcontainer_root/$container/sys
 end
 sudo chroot $container env DISPLAY=:0 $argv[2..-1]
-set_color yellow
-echo "$prefix [warn] Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
-set_color normal
-read -n1 -P "$prefix >>> " _umount_
+if [ "$autoumount" = "true" ]
+  sudo umount -f -l $ctcontainer_root/$container/dev
+  sudo umount -f -l $ctcontainer_root/$container/proc
+  sudo umount -f -l $ctcontainer_root/$container/sys
+  sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
+  sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
+  set_color green
+  echo "$prefix [info] Umountd"
+  set_color normal
+else
+  set_color yellow
+  echo "$prefix [warn] Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
+  set_color normal
+  read -n1 -P "$prefix >>> " _umount_
   switch $_umount_
   case y Y '*'
     sudo umount -f -l $ctcontainer_root/$container/dev
@@ -155,6 +173,7 @@ read -n1 -P "$prefix >>> " _umount_
     echo "$prefix [info] I'm not going to umount it,exit chroot only"
     set_color normal
   end
+end
 end
 function setup_user_xorg
 set container $argv[1]
@@ -200,10 +219,20 @@ else
 sudo mount -o bind /sys $ctcontainer_root/$container/sys
 end
 sudo chroot $container env DISPLAY=:0 $argv[2..-1]
-set_color yellow
-echo "$prefix [warn] Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
-set_color normal
-read -n1 -P "$prefix >>> " _umount_
+if [ "$autoumount" = "true" ]
+  sudo umount -f -l $ctcontainer_root/$container/dev
+  sudo umount -f -l $ctcontainer_root/$container/proc
+  sudo umount -f -l $ctcontainer_root/$container/sys
+  sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
+  sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
+  set_color green
+  echo "$prefix [info] Umountd"
+  set_color normal
+else
+  set_color yellow
+  echo "$prefix [warn] Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
+  set_color normal
+  read -n1 -P "$prefix >>> " _umount_
   switch $_umount_
   case y Y '*'
     sudo umount -f -l $ctcontainer_root/$container/dev
@@ -219,6 +248,7 @@ read -n1 -P "$prefix >>> " _umount_
     echo "$prefix [info] I'm not going to umount it,exit chroot only"
     set_color normal
   end
+end
 end
 function list
 echo ">Available<"
@@ -277,7 +307,7 @@ else
   set_color normal
 end
 end
-echo Build_Time_UTC=2021-12-19_06:09:16
+echo Build_Time_UTC=2021-12-19_06:58:03
 set prefix [ctcontainer]
 if test -d /etc/centerlinux/conf.d/
 else
@@ -309,6 +339,14 @@ case run
   run $argv[2] $argv[3..-1]
 case frun
   frun $argv[2] $argv[3..-1]
+case run-u
+  set autoumount true
+  run $argv[2] $argv[3..-1]
+  set -e autoumount
+case frun-u
+  set autoumount true
+  frun $argv[2] $argv[3..-1]
+  set -e autoumount
 case list
   list
 case v version

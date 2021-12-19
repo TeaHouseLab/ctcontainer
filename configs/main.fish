@@ -29,6 +29,14 @@ case run
   run $argv[2] $argv[3..-1]
 case frun
   frun $argv[2] $argv[3..-1]
+case run-u
+  set autoumount true
+  run $argv[2] $argv[3..-1]
+  set -e autoumount
+case frun-u
+  set autoumount true
+  frun $argv[2] $argv[3..-1]
+  set -e autoumount
 case list
   list
 case v version
