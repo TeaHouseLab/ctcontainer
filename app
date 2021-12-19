@@ -141,7 +141,7 @@ echo "$prefix [warn] Do you want to umount bind mounts(if another same container
 set_color normal
 read -n1 -P "$prefix >>> " _umount_
   switch $_umount_
-  case y Y
+  case y Y '*'
     sudo umount -f -l $ctcontainer_root/$container/dev
     sudo umount -f -l $ctcontainer_root/$container/proc
     sudo umount -f -l $ctcontainer_root/$container/sys
@@ -205,7 +205,7 @@ echo "$prefix [warn] Do you want to umount bind mounts(if another same container
 set_color normal
 read -n1 -P "$prefix >>> " _umount_
   switch $_umount_
-  case y Y
+  case y Y '*'
     sudo umount -f -l $ctcontainer_root/$container/dev
     sudo umount -f -l $ctcontainer_root/$container/proc
     sudo umount -f -l $ctcontainer_root/$container/sys
@@ -277,7 +277,7 @@ else
   set_color normal
 end
 end
-echo Build_Time_UTC=2021-12-19_02:25:53
+echo Build_Time_UTC=2021-12-19_06:09:16
 set prefix [ctcontainer]
 if test -d /etc/centerlinux/conf.d/
 else
