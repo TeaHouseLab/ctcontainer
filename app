@@ -230,6 +230,12 @@ end
 function init
 set container $argv[1]
 set containername $container
+if [ "$containername" = "" ]
+  set_color red
+  echo "$prefix [error] Nothing to init,abort"
+  set_color normal
+  exit
+end
 set_color yellow
 echo "$prefix Deploying..."
 set_color normal
@@ -260,6 +266,7 @@ if sudo -E curl -s -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer
   echo "$prefix $container deployed in $ctcontainer_root/$containername"
   set_color normal
   else
+  sudo rm -rf $ctcontainer_root/$containername
   set_color red
   echo "$prefix [error] Check your network and the name of container(use ctcontainer list to see all available distros)"
   set_color normal
@@ -270,7 +277,7 @@ else
   set_color normal
 end
 end
-echo Build_Time_UTC=2021-12-18_15:27:52
+echo Build_Time_UTC=2021-12-19_02:25:53
 set prefix [ctcontainer]
 if test -d /etc/centerlinux/conf.d/
 else
@@ -306,7 +313,7 @@ case list
   list
 case v version
   set_color yellow
-  echo "FrostFlower@build2"
+  echo "FrostFlower@build3"
   set_color normal
 case install
   install ctcontainer
