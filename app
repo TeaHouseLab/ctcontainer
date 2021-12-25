@@ -150,6 +150,7 @@ function purge
 end
 function setup_user_pulseaudio
     if grep -qs "$ctcontainer_root/$container/var/lib/dbus" /proc/mounts
+    else
         mount -o bind /var/lib/dbus $ctcontainer_root/$container/var/lib/dbus
     end
 end
@@ -320,7 +321,7 @@ function init
         set_color normal
     end
 end
-echo Build_Time_UTC=2021-12-25_08:41:41
+echo Build_Time_UTC=2021-12-25_12:38:58
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -333,12 +334,12 @@ else
     sudo mkdir -p /etc/centerlinux/conf.d/
 end
 if test -e /etc/centerlinux/conf.d/ctcontainer.conf
-    set -lx ctcontainer_root (sed -n '/ctcontainer_root=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/ctcontainer_root=//g')
-    set -lx ctcontainer_share (sed -n '/ctcontainer_share=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/ctcontainer_share=//g')
-    set -lx ctcontainer_log_level (sed -n '/log_level=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/log_level=//g')
-    set -lx ctcontainer_backend (sed -n '/backend=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/backend=//g')
-    set -lx ctcontainer_safety_level (sed -n '/safety_level=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/safety_level=//g')
-    set -lx ctcontainer_auto_umount (sed -n 'auto_umount/=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/auto_umount=//g')
+    set ctcontainer_root (sed -n '/ctcontainer_root=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/ctcontainer_root=//g')
+    set ctcontainer_share (sed -n '/ctcontainer_share=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/ctcontainer_share=//g')
+    set ctcontainer_log_level (sed -n '/log_level=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/log_level=//g')
+    set ctcontainer_backend (sed -n '/backend=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/backend=//g')
+    set ctcontainer_safety_level (sed -n '/safety_level=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/safety_level=//g')
+    set ctcontainer_auto_umount (sed -n '/auto_umount=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/auto_umount=//g')
 else
     ctconfig_init
 end
@@ -381,7 +382,7 @@ switch $argv[1]
         list
     case v version
         set_color yellow
-        echo "FrostFlower@build5"
+        echo "FrostFlower@build6"
         set_color normal
     case install
         install ctcontainer
