@@ -9,7 +9,6 @@ function run
     if [ "$ctcontainer_safety_level" = 2 ]
     else
         setup_user_xorg
-        setup_user_pulseaudio
     end
     cd $ctcontainer_root
     if [ "$ctcontainer_safety_level" = 1 ]; or [ "$ctcontainer_safety_level" = 2 ]
@@ -63,10 +62,7 @@ function run
         sudo umount -f -l $ctcontainer_root/$container/proc
         sudo umount -f -l $ctcontainer_root/$container/sys
         if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
-        sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
-        end
-        if grep -qs "$ctcontainer_root/$container/var/lib/dbus" /proc/mounts
-        sudo umount -f -l $ctcontainer_root/$container/var/lib/dbus
+            sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
         end
         sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
         logger 0 Umountd
@@ -78,8 +74,9 @@ function run
                 sudo umount -f -l $ctcontainer_root/$container/dev
                 sudo umount -f -l $ctcontainer_root/$container/proc
                 sudo umount -f -l $ctcontainer_root/$container/sys
-                sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
-                sudo umount -f -l $ctcontainer_root/$container/var/lib/dbus
+                if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
+                    sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
+                end
                 sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
                 logger 0 Umountd
             case n N
