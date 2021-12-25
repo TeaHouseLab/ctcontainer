@@ -220,6 +220,8 @@ function run
         logger 3 "Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
         read -n1 -P "$prefix >>> " _umount_
         switch $_umount_
+            case n N
+                logger 0 "I'm not going to umount it,exit chroot only"
             case y Y '*'
                 sudo umount -f -l $ctcontainer_root/$container/dev
                 sudo umount -f -l $ctcontainer_root/$container/proc
@@ -229,8 +231,6 @@ function run
                 end
                 sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
                 logger 0 Umountd
-            case n N
-                logger 0 "I'm not going to umount it,exit chroot only"
         end
     end
 end
@@ -313,7 +313,7 @@ function init
         set_color normal
     end
 end
-echo Build_Time_UTC=2021-12-25_13:18:01
+echo Build_Time_UTC=2021-12-25_14:02:21
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
