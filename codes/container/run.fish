@@ -1,60 +1,89 @@
 function run
-set container $argv[1]
-if [ "$argv[2..-1]" = "" ]
-  set_color red
-  echo "$prefix [error] Nothing to run,abort"
-  set_color normal
-  exit
-end
-echo "$prefix [info] Launching $container from $ctcontainer_root"
-setup_user_share $container
-setup_user_xorg $container
-cd $ctcontainer_root
-if grep -qs "$ctcontainer_root/$container/dev" /proc/mounts
-else
-sudo mount -o bind,ro /dev $ctcontainer_root/$container/dev
-end
-if grep -qs "$ctcontainer_root/$container/dev/pts" /proc/mounts
-else
-sudo mount -o bind /dev/pts $ctcontainer_root/$container/dev/pts
-end
-if grep -qs "$ctcontainer_root/$container/proc" /proc/mounts
-else
-sudo mount -o bind,ro /proc $ctcontainer_root/$container/proc
-end
-if grep -qs "$ctcontainer_root/$container/sys" /proc/mounts
-else
-sudo mount -o bind,ro /sys $ctcontainer_root/$container/sys
-end
-sudo chroot $container env DISPLAY=:0 $argv[2..-1]
-if [ "$autoumount" = "true" ]
-  sudo umount -f -l $ctcontainer_root/$container/dev
-  sudo umount -f -l $ctcontainer_root/$container/proc
-  sudo umount -f -l $ctcontainer_root/$container/sys
-  sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
-  sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
-  set_color green
-  echo "$prefix [info] Umountd"
-  set_color normal
-else
-  set_color yellow
-  echo "$prefix [warn] Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
-  set_color normal
-  read -n1 -P "$prefix >>> " _umount_
-  switch $_umount_
-  case y Y '*'
-    sudo umount -f -l $ctcontainer_root/$container/dev
-    sudo umount -f -l $ctcontainer_root/$container/proc
-    sudo umount -f -l $ctcontainer_root/$container/sys
-    sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
-    sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
-    set_color green
-    echo "$prefix [info] Umountd"
-    set_color normal
-  case n N
-    set_color green
-    echo "$prefix [info] I'm not going to umount it,exit chroot only"
-    set_color normal
-  end
-end
+    set -lx container $argv[1]
+    if [ "$argv[2..-1]" = "" ]
+        logger 4 "Nothing to run,abort"
+        exit
+    end
+    logger 0 "Launching $container from $ctcontainer_root"
+    setup_user_share
+    if [ "$ctcontainer_safety_level" = 2 ]
+    else
+        setup_user_xorg
+        setup_user_pulseaudio
+    end
+    cd $ctcontainer_root
+    if [ "$ctcontainer_safety_level" = 1 ]; or [ "$ctcontainer_safety_level" = 2 ]
+        if [ "$ctcontainer_log_level" = debug ]
+            logger 2 'mount in read-only filesystem'
+        end
+        if grep -qs "$ctcontainer_root/$container/dev" /proc/mounts
+        else
+            sudo mount -o bind,ro /dev $ctcontainer_root/$container/dev
+        end
+        if grep -qs "$ctcontainer_root/$container/dev/pts" /proc/mounts
+        else
+            sudo mount -o bind /dev/pts $ctcontainer_root/$container/dev/pts
+        end
+        if grep -qs "$ctcontainer_root/$container/proc" /proc/mounts
+        else
+            sudo mount -o bind,ro /proc $ctcontainer_root/$container/proc
+        end
+        if grep -qs "$ctcontainer_root/$container/sys" /proc/mounts
+        else
+            sudo mount -o bind,ro /sys $ctcontainer_root/$container/sys
+        end
+    else
+        if [ "$ctcontainer_log_level" = debug ]
+            logger 2 'mount in read-write filesystem'
+        end
+        if grep -qs "$ctcontainer_root/$container/dev" /proc/mounts
+        else
+            sudo mount -o bind,rw /dev $ctcontainer_root/$container/dev
+        end
+        if grep -qs "$ctcontainer_root/$container/dev/pts" /proc/mounts
+        else
+            sudo mount -o bind /dev/pts $ctcontainer_root/$container/dev/pts
+        end
+        if grep -qs "$ctcontainer_root/$container/proc" /proc/mounts
+        else
+            sudo mount -o bind,rw /proc $ctcontainer_root/$container/proc
+        end
+        if grep -qs "$ctcontainer_root/$container/sys" /proc/mounts
+        else
+            sudo mount -o bind,rw /sys $ctcontainer_root/$container/sys
+        end
+    end
+    if [ "$ctcontainer_safety_level" = 2 ]
+        sudo chroot --userspec safety:safety $container env HOME=/home/safety DISPLAY=:0 $argv[2..-1]
+    else
+        sudo chroot $container env DISPLAY=:0 $argv[2..-1]
+    end
+    if [ "$ctcontainer_auto_umount" = 1 ]
+        sudo umount -f -l $ctcontainer_root/$container/dev
+        sudo umount -f -l $ctcontainer_root/$container/proc
+        sudo umount -f -l $ctcontainer_root/$container/sys
+        if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
+        sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
+        end
+        if grep -qs "$ctcontainer_root/$container/var/lib/dbus" /proc/mounts
+        sudo umount -f -l $ctcontainer_root/$container/var/lib/dbus
+        end
+        sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
+        logger 0 Umountd
+    else
+        logger 3 "Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
+        read -n1 -P "$prefix >>> " _umount_
+        switch $_umount_
+            case y Y '*'
+                sudo umount -f -l $ctcontainer_root/$container/dev
+                sudo umount -f -l $ctcontainer_root/$container/proc
+                sudo umount -f -l $ctcontainer_root/$container/sys
+                sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
+                sudo umount -f -l $ctcontainer_root/$container/var/lib/dbus
+                sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
+                logger 0 Umountd
+            case n N
+                logger 0 "I'm not going to umount it,exit chroot only"
+        end
+    end
 end
