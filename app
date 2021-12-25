@@ -312,7 +312,7 @@ function init
         set_color normal
     end
 end
-echo Build_Time_UTC=2021-12-25_12:49:35
+echo Build_Time_UTC=2021-12-25_13:05:54
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
