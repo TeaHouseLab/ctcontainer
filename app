@@ -148,12 +148,6 @@ function purge
         end
     end
 end
-function setup_user_pulseaudio
-    if grep -qs "$ctcontainer_root/$container/var/lib/dbus" /proc/mounts
-    else
-        mount -o bind /var/lib/dbus $ctcontainer_root/$container/var/lib/dbus
-    end
-end
 function run
     set -lx container $argv[1]
     if [ "$argv[2..-1]" = "" ]
@@ -165,7 +159,6 @@ function run
     if [ "$ctcontainer_safety_level" = 2 ]
     else
         setup_user_xorg
-        setup_user_pulseaudio
     end
     cd $ctcontainer_root
     if [ "$ctcontainer_safety_level" = 1 ]; or [ "$ctcontainer_safety_level" = 2 ]
@@ -219,10 +212,7 @@ function run
         sudo umount -f -l $ctcontainer_root/$container/proc
         sudo umount -f -l $ctcontainer_root/$container/sys
         if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
-        sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
-        end
-        if grep -qs "$ctcontainer_root/$container/var/lib/dbus" /proc/mounts
-        sudo umount -f -l $ctcontainer_root/$container/var/lib/dbus
+            sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
         end
         sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
         logger 0 Umountd
@@ -234,8 +224,9 @@ function run
                 sudo umount -f -l $ctcontainer_root/$container/dev
                 sudo umount -f -l $ctcontainer_root/$container/proc
                 sudo umount -f -l $ctcontainer_root/$container/sys
-                sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
-                sudo umount -f -l $ctcontainer_root/$container/var/lib/dbus
+                if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
+                    sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
+                end
                 sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
                 logger 0 Umountd
             case n N
@@ -303,6 +294,7 @@ function init
         if sudo tar xf $container.tar.gz
             sudo sh -c "echo 'safety:x:1000:1000:Linux User,,,:/home/safety:/bin/sh' >> $ctcontainer_root/$containername/etc/passwd"
             sudo sh -c "echo 'safety:x:1000:' >> $ctcontainer_root/$containername/etc/group"
+            sudo sh -c "echo 'safety:!:18986:0:99999:7:::' >> $ctcontainer_root/$containername/etc/shadow"
             sudo sh -c "mkdir $ctcontainer_root/$containername/home/safety"
             run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety'
             sudo sh -c "echo 'nameserver 8.8.8.8' > $ctcontainer_root/$containername/etc/resolv.conf"
@@ -321,7 +313,7 @@ function init
         set_color normal
     end
 end
-echo Build_Time_UTC=2021-12-25_12:38:58
+echo Build_Time_UTC=2021-12-25_13:18:01
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
