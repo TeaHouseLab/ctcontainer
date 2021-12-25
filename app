@@ -150,6 +150,7 @@ function purge
 end
 function setup_user_pulseaudio
     if grep -qs "$ctcontainer_root/$container/var/lib/dbus" /proc/mounts
+    else
         mount -o bind /var/lib/dbus $ctcontainer_root/$container/var/lib/dbus
     end
 end
@@ -320,7 +321,7 @@ function init
         set_color normal
     end
 end
-echo Build_Time_UTC=2021-12-25_11:43:15
+echo Build_Time_UTC=2021-12-25_12:00:01
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -338,7 +339,7 @@ if test -e /etc/centerlinux/conf.d/ctcontainer.conf
     set ctcontainer_log_level (sed -n '/log_level=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/log_level=//g')
     set ctcontainer_backend (sed -n '/backend=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/backend=//g')
     set ctcontainer_safety_level (sed -n '/safety_level=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/safety_level=//g')
-    set ctcontainer_auto_umount (sed -n 'auto_umount/=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/auto_umount=//g')
+    set ctcontainer_auto_umount (sed -n '/auto_umount=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/auto_umount=//g')
 else
     ctconfig_init
 end

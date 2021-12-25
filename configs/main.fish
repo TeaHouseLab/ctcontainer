@@ -15,7 +15,7 @@ if test -e /etc/centerlinux/conf.d/ctcontainer.conf
     set ctcontainer_log_level (sed -n '/log_level=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/log_level=//g')
     set ctcontainer_backend (sed -n '/backend=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/backend=//g')
     set ctcontainer_safety_level (sed -n '/safety_level=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/safety_level=//g')
-    set ctcontainer_auto_umount (sed -n 'auto_umount/=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/auto_umount=//g')
+    set ctcontainer_auto_umount (sed -n '/auto_umount=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/auto_umount=//g')
 else
     ctconfig_init
 end
@@ -58,7 +58,7 @@ switch $argv[1]
         list
     case v version
         set_color yellow
-        echo "FrostFlower@build5"
+        echo "FrostFlower@build6"
         set_color normal
     case install
         install ctcontainer
