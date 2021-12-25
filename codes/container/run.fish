@@ -70,6 +70,8 @@ function run
         logger 3 "Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
         read -n1 -P "$prefix >>> " _umount_
         switch $_umount_
+            case n N
+                logger 0 "I'm not going to umount it,exit chroot only"
             case y Y '*'
                 sudo umount -f -l $ctcontainer_root/$container/dev
                 sudo umount -f -l $ctcontainer_root/$container/proc
@@ -79,8 +81,6 @@ function run
                 end
                 sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
                 logger 0 Umountd
-            case n N
-                logger 0 "I'm not going to umount it,exit chroot only"
         end
     end
 end
