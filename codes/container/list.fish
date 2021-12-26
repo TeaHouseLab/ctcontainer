@@ -1,6 +1,6 @@
 function list
     echo ">Available<"
-    curl -s -L https://github.com/TeaHouseLab/FileCloud/releases/download/ctcontainer/available
+    curl -s -L https://cdngit.ruzhtw.top/ctcontainer/available
     echo
     echo ">Installed<"
     list_menu $ctcontainer_root

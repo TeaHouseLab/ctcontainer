@@ -63,13 +63,13 @@ function run
         sudo chroot $container env DISPLAY=:0 $argv[2..-1]
     end
     if [ "$ctcontainer_auto_umount" = 1 ]
-        sudo umount -f -l $ctcontainer_root/$container/dev
-        sudo umount -f -l $ctcontainer_root/$container/proc
-        sudo umount -f -l $ctcontainer_root/$container/sys
+        sudo umount -l $ctcontainer_root/$container/dev
+        sudo umount -l $ctcontainer_root/$container/proc
+        sudo umount -l $ctcontainer_root/$container/sys
         if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
-            sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
+            sudo umount -l $ctcontainer_root/$container/tmp/.X11-unix
         end
-        sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
+        sudo umount -l $ctcontainer_root/$container/ctcontainer_share
         logger 0 Umountd
     else
         logger 3 "Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
@@ -78,13 +78,13 @@ function run
             case n N
                 logger 0 "I'm not going to umount it,exit chroot only"
             case y Y '*'
-                sudo umount -f -l $ctcontainer_root/$container/dev
-                sudo umount -f -l $ctcontainer_root/$container/proc
-                sudo umount -f -l $ctcontainer_root/$container/sys
+                sudo umount -l $ctcontainer_root/$container/dev
+                sudo umount -l $ctcontainer_root/$container/proc
+                sudo umount -l $ctcontainer_root/$container/sys
                 if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
-                    sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
+                    sudo umount -l $ctcontainer_root/$container/tmp/.X11-unix
                 end
-                sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
+                sudo umount -l $ctcontainer_root/$container/ctcontainer_share
                 logger 0 Umountd
         end
     end
