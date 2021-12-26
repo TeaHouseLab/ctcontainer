@@ -150,6 +150,11 @@ function purge
 end
 function run
     set -lx container $argv[1]
+    if test -d $ctcontainer_root/$container
+    else
+        logger 4 "No such container exist,abort,check your containerlist,or probably there's a incorrect option is providered"
+        exit
+    end
     if [ "$argv[2..-1]" = "" ]
         logger 4 "Nothing to run,abort"
         exit
@@ -313,7 +318,7 @@ function init
         set_color normal
     end
 end
-echo Build_Time_UTC=2021-12-25_14:02:21
+echo Build_Time_UTC=2021-12-26_02:02:25
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
