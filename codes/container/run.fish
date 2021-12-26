@@ -1,5 +1,10 @@
 function run
     set -lx container $argv[1]
+    if test -d $ctcontainer_root/$container
+    else
+        logger 4 "No such container exist,abort,check your containerlist,or probably there's a incorrect option is providered"
+        exit
+    end
     if [ "$argv[2..-1]" = "" ]
         logger 4 "Nothing to run,abort"
         exit
