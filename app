@@ -32,7 +32,7 @@ function help_echo
   set_color normal
   echo " -argv[1]:the command to execute"
   echo "  -Available:
-        list >>> list installed container
+        list >>> list installed and Available container
 
         run argv[2] argv[3]  >>> Run command in chroot
         argv[2]: the code of container
@@ -41,10 +41,12 @@ function help_echo
           --ctauto_umount={0,1}
           --ctsafety_level={0,1,2}
         init argv[2] (-f if you don't want the random container code) >>> Create a container
-        argv[2]: debian,debian-testing,debian-unstable,alpinelinux
+        argv[2]: archlinux,alpinelinux,deepin-stable,debian-stable,debian-testing,debian-unstable,fedora35,manjarolinux,parrotsec-testing,ubuntu-impish
 
         purge argv[2] >>> Destroy a container
-        argv[2]: debian,debian-testing,debian-unstable,alpinelinux"
+        argv[2]: debian,debian-testing,debian-unstable,alpinelinux
+        
+        v version >>> Show version"
   echo "======================================"
 end
 function install
@@ -126,7 +128,10 @@ function setup_user_share
     end
     set_color cyan
     set_color normal
-    sudo mount --bind $ctcontainer_share $ctcontainer_root/$container/ctcontainer_share
+    if grep -qs "$ctcontainer_root/$container/ctcontainer_share" /proc/mounts
+    else
+    sudo mount -o bind $ctcontainer_share $ctcontainer_root/$container/ctcontainer_share
+    end
 end
 function purge
     for container in $argv[1..-1]
@@ -213,13 +218,13 @@ function run
         sudo chroot $container env DISPLAY=:0 $argv[2..-1]
     end
     if [ "$ctcontainer_auto_umount" = 1 ]
-        sudo umount -f -l $ctcontainer_root/$container/dev
-        sudo umount -f -l $ctcontainer_root/$container/proc
-        sudo umount -f -l $ctcontainer_root/$container/sys
+        sudo umount -l $ctcontainer_root/$container/dev
+        sudo umount -l $ctcontainer_root/$container/proc
+        sudo umount -l $ctcontainer_root/$container/sys
         if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
-            sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
+            sudo umount -l $ctcontainer_root/$container/tmp/.X11-unix
         end
-        sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
+        sudo umount -l $ctcontainer_root/$container/ctcontainer_share
         logger 0 Umountd
     else
         logger 3 "Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
@@ -228,13 +233,13 @@ function run
             case n N
                 logger 0 "I'm not going to umount it,exit chroot only"
             case y Y '*'
-                sudo umount -f -l $ctcontainer_root/$container/dev
-                sudo umount -f -l $ctcontainer_root/$container/proc
-                sudo umount -f -l $ctcontainer_root/$container/sys
+                sudo umount -l $ctcontainer_root/$container/dev
+                sudo umount -l $ctcontainer_root/$container/proc
+                sudo umount -l $ctcontainer_root/$container/sys
                 if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
-                    sudo umount -f -l $ctcontainer_root/$container/tmp/.X11-unix
+                    sudo umount -l $ctcontainer_root/$container/tmp/.X11-unix
                 end
-                sudo umount -f -l $ctcontainer_root/$container/ctcontainer_share
+                sudo umount -l $ctcontainer_root/$container/ctcontainer_share
                 logger 0 Umountd
         end
     end
@@ -258,7 +263,7 @@ function setup_user_xorg
 end
 function list
     echo ">Available<"
-    curl -s -L https://github.com/TeaHouseLab/FileCloud/releases/download/ctcontainer/available
+    curl -s -L https://cdngit.ruzhtw.top/ctcontainer/available
     echo
     echo ">Installed<"
     list_menu $ctcontainer_root
@@ -318,7 +323,7 @@ function init
         set_color normal
     end
 end
-echo Build_Time_UTC=2021-12-26_02:02:25
+echo Build_Time_UTC=2021-12-26_03:46:19
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -379,7 +384,7 @@ switch $argv[1]
         list
     case v version
         set_color yellow
-        echo "FrostFlower@build6"
+        echo "FrostFlower@build7"
         set_color normal
     case install
         install ctcontainer
