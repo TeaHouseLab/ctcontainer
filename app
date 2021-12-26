@@ -368,7 +368,7 @@ function init
         set_color normal
     end
 end
-echo Build_Time_UTC=2021-12-26_07:31:09
+echo Build_Time_UTC=2021-12-26_07:34:26
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -429,7 +429,7 @@ switch $argv[1]
         list
     case v version
         set_color yellow
-        echo "FrostFlower@build7"
+        echo "FrostFlower@build8"
         set_color normal
     case install
         install ctcontainer
