@@ -58,7 +58,7 @@ switch $argv[1]
         list
     case v version
         set_color yellow
-        echo "FrostFlower@build7"
+        echo "FrostFlower@build8"
         set_color normal
     case install
         install ctcontainer
