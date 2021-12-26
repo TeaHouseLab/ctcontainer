@@ -168,7 +168,12 @@ function run
     setup_user_share
     if [ "$ctcontainer_safety_level" = 2 ]
     else
-        setup_user_xorg
+        if [ "$ctcontainer_safety_level" = 1 ]
+            setup_user_xorg
+        else
+            setup_user_xorg
+            setup_dbus
+        end
     end
     cd $ctcontainer_root
     if [ "$ctcontainer_safety_level" = 1 ]; or [ "$ctcontainer_safety_level" = 2 ]
@@ -213,9 +218,13 @@ function run
         end
     end
     if [ "$ctcontainer_safety_level" = 2 ]
-        sudo chroot --userspec safety:safety $container env HOME=/home/safety DISPLAY=:0 $argv[2..-1]
+        sudo chroot --userspec safety:safety $container env HOME=/home/safety $argv[2..-1]
     else
-        sudo chroot $container env DISPLAY=:0 $argv[2..-1]
+        if [ "$ctcontainer_safety_level" = 1 ]
+            sudo chroot $container env DISPLAY=:0 $argv[2..-1]
+        else
+            sudo chroot $container env DISPLAY=:0 XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR $argv[2..-1]
+        end
     end
     if [ "$ctcontainer_auto_umount" = 1 ]
         sudo umount -l $ctcontainer_root/$container/dev
@@ -224,8 +233,17 @@ function run
         if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
             sudo umount -l $ctcontainer_root/$container/tmp/.X11-unix
         end
+        if grep -qs "$ctcontainer_root/$container/var/run/dbus" /proc/mounts
+            sudo umount -l $ctcontainer_root/$container/var/run/dbus
+        end
+        if grep -qs "$ctcontainer_root/$container/run/dbus" /proc/mounts
+            sudo umount -l $ctcontainer_root/$container/run/dbus
+        end
+        if grep -qs "$ctcontainer_root/$container$XDG_RUNTIME_DIR" /proc/mounts
+            sudo umount -l $ctcontainer_root/$container$XDG_RUNTIME_DIR
+        end
         sudo umount -l $ctcontainer_root/$container/ctcontainer_share
-        logger 0 Umountd
+        logger 1 Umountd
     else
         logger 3 "Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
         read -n1 -P "$prefix >>> " _umount_
@@ -239,8 +257,17 @@ function run
                 if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
                     sudo umount -l $ctcontainer_root/$container/tmp/.X11-unix
                 end
+                if grep -qs "$ctcontainer_root/$container/var/run/dbus" /proc/mounts
+                    sudo umount -l $ctcontainer_root/$container/var/run/dbus
+                end
+                if grep -qs "$ctcontainer_root/$container/run/dbus" /proc/mounts
+                    sudo umount -l $ctcontainer_root/$container/run/dbus
+                end
+                if grep -qs "$ctcontainer_root/$container$XDG_RUNTIME_DIR" /proc/mounts
+                    sudo umount -l $ctcontainer_root/$container$XDG_RUNTIME_DIR
+                end
                 sudo umount -l $ctcontainer_root/$container/ctcontainer_share
-                logger 0 Umountd
+                logger 1 Umountd
         end
     end
 end
@@ -259,6 +286,24 @@ function setup_user_xorg
     if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
     else
         sudo mount -o bind /tmp/.X11-unix $ctcontainer_root/$container/tmp/.X11-unix
+    end
+end
+function setup_dbus
+    if test -d $ctcontainer_root/$container/var/run/dbus
+    else
+        sudo mkdir -p $ctcontainer_root/$container/var/run/dbus
+    end
+    if test -d $ctcontainer_root/$container$XDG_RUNTIME_DIR
+    else
+        sudo mkdir -p $ctcontainer_root/$container$XDG_RUNTIME_DIR
+    end
+    if grep -qs "$ctcontainer_root/$container/var/run/dbus" /proc/mounts
+    else
+        sudo mount -o bind /var/run/dbus $ctcontainer_root/$container/var/run/dbus
+    end
+    if grep -qs "$ctcontainer_root/$container$XDG_RUNTIME_DIR" /proc/mounts
+    else
+        sudo mount -o bind $XDG_RUNTIME_DIR $ctcontainer_root/$container$XDG_RUNTIME_DIR
     end
 end
 function list
@@ -323,7 +368,7 @@ function init
         set_color normal
     end
 end
-echo Build_Time_UTC=2021-12-26_03:46:19
+echo Build_Time_UTC=2021-12-26_07:31:09
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
