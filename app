@@ -117,22 +117,6 @@ function ctconfig_init
     sudo sh -c "echo "safety_level=1" >> /etc/centerlinux/conf.d/ctcontainer.conf"
     sudo sh -c "echo "auto_umount=1" >> /etc/centerlinux/conf.d/ctcontainer.conf"
 end
-function setup_user_share
-    if test -d $ctcontainer_share
-    else
-        mkdir -p $ctcontainer_share
-    end
-    if test -d $ctcontainer_root/$container/ctcontainer_share
-    else
-        sudo mkdir -p $ctcontainer_root/$container/ctcontainer_share
-    end
-    set_color cyan
-    set_color normal
-    if grep -qs "$ctcontainer_root/$container/ctcontainer_share" /proc/mounts
-    else
-    sudo mount -o bind $ctcontainer_share $ctcontainer_root/$container/ctcontainer_share
-    end
-end
 function purge
     for container in $argv[1..-1]
         cd $ctcontainer_root
@@ -151,159 +135,6 @@ function purge
             echo "$prefix [error]No such container in root.ctcontainer"
             set_color normal
         end
-    end
-end
-function run
-    set -lx container $argv[1]
-    if test -d $ctcontainer_root/$container
-    else
-        logger 4 "No such container exist,abort,check your containerlist,or probably there's a incorrect option is providered"
-        exit
-    end
-    if [ "$argv[2..-1]" = "" ]
-        logger 4 "Nothing to run,abort"
-        exit
-    end
-    logger 0 "Launching $container from $ctcontainer_root"
-    setup_user_share
-    if [ "$ctcontainer_safety_level" = 2 ]
-    else
-        if [ "$ctcontainer_safety_level" = 1 ]
-            setup_user_xorg
-        else
-            setup_user_xorg
-            setup_dbus
-        end
-    end
-    cd $ctcontainer_root
-    if [ "$ctcontainer_safety_level" = 1 ]; or [ "$ctcontainer_safety_level" = 2 ]
-        if [ "$ctcontainer_log_level" = debug ]
-            logger 2 'mount in read-only filesystem'
-        end
-        if grep -qs "$ctcontainer_root/$container/dev" /proc/mounts
-        else
-            sudo mount -o bind,ro /dev $ctcontainer_root/$container/dev
-        end
-        if grep -qs "$ctcontainer_root/$container/dev/pts" /proc/mounts
-        else
-            sudo mount -o bind /dev/pts $ctcontainer_root/$container/dev/pts
-        end
-        if grep -qs "$ctcontainer_root/$container/proc" /proc/mounts
-        else
-            sudo mount -o bind,ro /proc $ctcontainer_root/$container/proc
-        end
-        if grep -qs "$ctcontainer_root/$container/sys" /proc/mounts
-        else
-            sudo mount -o bind,ro /sys $ctcontainer_root/$container/sys
-        end
-    else
-        if [ "$ctcontainer_log_level" = debug ]
-            logger 2 'mount in read-write filesystem'
-        end
-        if grep -qs "$ctcontainer_root/$container/dev" /proc/mounts
-        else
-            sudo mount -o bind,rw /dev $ctcontainer_root/$container/dev
-        end
-        if grep -qs "$ctcontainer_root/$container/dev/pts" /proc/mounts
-        else
-            sudo mount -o bind /dev/pts $ctcontainer_root/$container/dev/pts
-        end
-        if grep -qs "$ctcontainer_root/$container/proc" /proc/mounts
-        else
-            sudo mount -o bind,rw /proc $ctcontainer_root/$container/proc
-        end
-        if grep -qs "$ctcontainer_root/$container/sys" /proc/mounts
-        else
-            sudo mount -o bind,rw /sys $ctcontainer_root/$container/sys
-        end
-    end
-    if [ "$ctcontainer_safety_level" = 2 ]
-        sudo chroot --userspec safety:safety $container env HOME=/home/safety $argv[2..-1]
-    else
-        if [ "$ctcontainer_safety_level" = 1 ]
-            sudo chroot $container env DISPLAY=:0 $argv[2..-1]
-        else
-            sudo chroot $container env DISPLAY=:0 XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR $argv[2..-1]
-        end
-    end
-    if [ "$ctcontainer_auto_umount" = 1 ]
-        sudo umount -l $ctcontainer_root/$container/dev
-        sudo umount -l $ctcontainer_root/$container/proc
-        sudo umount -l $ctcontainer_root/$container/sys
-        if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
-            sudo umount -l $ctcontainer_root/$container/tmp/.X11-unix
-        end
-        if grep -qs "$ctcontainer_root/$container/var/run/dbus" /proc/mounts
-            sudo umount -l $ctcontainer_root/$container/var/run/dbus
-        end
-        if grep -qs "$ctcontainer_root/$container/run/dbus" /proc/mounts
-            sudo umount -l $ctcontainer_root/$container/run/dbus
-        end
-        if grep -qs "$ctcontainer_root/$container$XDG_RUNTIME_DIR" /proc/mounts
-            sudo umount -l $ctcontainer_root/$container$XDG_RUNTIME_DIR
-        end
-        sudo umount -l $ctcontainer_root/$container/ctcontainer_share
-        logger 1 Umountd
-    else
-        logger 3 "Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
-        read -n1 -P "$prefix >>> " _umount_
-        switch $_umount_
-            case n N
-                logger 0 "I'm not going to umount it,exit chroot only"
-            case y Y '*'
-                sudo umount -l $ctcontainer_root/$container/dev
-                sudo umount -l $ctcontainer_root/$container/proc
-                sudo umount -l $ctcontainer_root/$container/sys
-                if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
-                    sudo umount -l $ctcontainer_root/$container/tmp/.X11-unix
-                end
-                if grep -qs "$ctcontainer_root/$container/var/run/dbus" /proc/mounts
-                    sudo umount -l $ctcontainer_root/$container/var/run/dbus
-                end
-                if grep -qs "$ctcontainer_root/$container/run/dbus" /proc/mounts
-                    sudo umount -l $ctcontainer_root/$container/run/dbus
-                end
-                if grep -qs "$ctcontainer_root/$container$XDG_RUNTIME_DIR" /proc/mounts
-                    sudo umount -l $ctcontainer_root/$container$XDG_RUNTIME_DIR
-                end
-                sudo umount -l $ctcontainer_root/$container/ctcontainer_share
-                logger 1 Umountd
-        end
-    end
-end
-function setup_user_xorg
-    if test -d $ctcontainer_root/$container/tmp/.X11-unix
-    else
-        sudo mkdir -p $ctcontainer_root/$container/tmp/.X11-unix
-    end
-    if command -q -v xhost
-        xhost +local:
-    else
-        set_color red
-        echo "$prefix [error] Xhost not found,xorg in container couldn't be set up,still try to mount the .X11-unix directory"
-        set_color normal
-    end
-    if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
-    else
-        sudo mount -o bind /tmp/.X11-unix $ctcontainer_root/$container/tmp/.X11-unix
-    end
-end
-function setup_dbus
-    if test -d $ctcontainer_root/$container/var/run/dbus
-    else
-        sudo mkdir -p $ctcontainer_root/$container/var/run/dbus
-    end
-    if test -d $ctcontainer_root/$container$XDG_RUNTIME_DIR
-    else
-        sudo mkdir -p $ctcontainer_root/$container$XDG_RUNTIME_DIR
-    end
-    if grep -qs "$ctcontainer_root/$container/var/run/dbus" /proc/mounts
-    else
-        sudo mount -o bind /var/run/dbus $ctcontainer_root/$container/var/run/dbus
-    end
-    if grep -qs "$ctcontainer_root/$container$XDG_RUNTIME_DIR" /proc/mounts
-    else
-        sudo mount -o bind $XDG_RUNTIME_DIR $ctcontainer_root/$container$XDG_RUNTIME_DIR
     end
 end
 function list
@@ -368,7 +199,212 @@ function init
         set_color normal
     end
 end
-echo Build_Time_UTC=2021-12-26_07:34:26
+function setup_dir_nspawn
+    if test -d $ctcontainer_root/$container/var/run/dbus
+    else
+        sudo mkdir -p $ctcontainer_root/$container/var/run/dbus
+    end
+    if test -d $ctcontainer_root/$container$XDG_RUNTIME_DIR
+    else
+        sudo mkdir -p $ctcontainer_root/$container$XDG_RUNTIME_DIR
+    end
+    if test -d $ctcontainer_root/$container/tmp/.X11-unix
+    else
+        sudo mkdir -p $ctcontainer_root/$container/tmp/.X11-unix
+    end
+    if test -d $ctcontainer_share
+    else
+        mkdir -p $ctcontainer_share
+    end
+    if test -d $ctcontainer_root/$container/ctcontainer_share
+    else
+        sudo mkdir -p $ctcontainer_root/$container/ctcontainer_share
+    end
+end
+function nspawn_run
+    set -lx container $argv[1]
+    if test -d $ctcontainer_root/$container
+    else
+        logger 4 "No such container exist,abort,check your containerlist,or probably there's a incorrect option is providered"
+        exit
+    end
+    if [ "$argv[2..-1]" = "" ]
+        logger 4 "Nothing to run,abort"
+        exit
+    end
+    setup_dir_nspawn
+    cd $ctcontainer_root
+    essential_mount
+    switch $ctcontainer_safety_level
+        case -1
+            sudo systemd-nspawn -q -u safety -D $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
+        case 0
+            sudo systemd-nspawn -b -q -D $container
+        case 1
+            sudo systemd-nspawn -q -D $container env DISPLAY=:0 $argv[2..-1]
+        case 2
+            sudo systemd-nspawn -q -u safety -D $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
+        case h '*'
+            logger 4 "can't understand what is $ctcontainer_safety_level,abort"
+            exit
+    end
+    essential_umount
+end
+function chroot_run
+    set -lx container $argv[1]
+    set -lx chroot_mount_point
+    if test -d $ctcontainer_root/$container
+    else
+        logger 4 "No such container exist,abort,check your containerlist,or probably there's a incorrect option is providered"
+        exit
+    end
+    if [ "$argv[2..-1]" = "" ]
+        logger 4 "Nothing to run,abort"
+        exit
+    end
+    cd $ctcontainer_root
+    essential_mount
+    switch $ctcontainer_safety_level
+        case -1
+            sudo chroot --userspec safety:safety $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
+        case 0
+            sudo chroot $container env DISPLAY=:0 XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR $argv[2..-1]
+        case 1
+            sudo chroot $container env DISPLAY=:0 $argv[2..-1]
+        case 2
+            sudo chroot --userspec safety:safety $container env HOME=/home/safety USER=safety $argv[2..-1]
+        case h '*'
+            logger 4 "can't understand what is $ctcontainer_safety_level,abort"
+            exit
+    end
+    essential_umount
+end
+function setup_user_share
+    if test -d $ctcontainer_share
+    else
+        mkdir -p $ctcontainer_share
+    end
+    if test -d $ctcontainer_root/$container/ctcontainer_share
+    else
+        sudo mkdir -p $ctcontainer_root/$container/ctcontainer_share
+    end
+    if grep -qs "$ctcontainer_root/$container/ctcontainer_share" /proc/mounts
+    else
+    sudo mount -o bind $ctcontainer_share $ctcontainer_root/$container/ctcontainer_share
+    end
+end
+function essential_mount
+    logger 0 "Launching $container from $ctcontainer_root"
+    function chroot_mount_ro
+        for chroot_mount_target in $chroot_mount_point
+            if [ "$ctcontainer_log_level" = debug ]
+                logger 2 "Mounting $chroot_mount_target $ctcontainer_root/$container$chroot_mount_target"
+            end
+            if grep -qs "$ctcontainer_root/$container$chroot_mount_target" /proc/mounts
+            else
+                sudo mount -o bind,ro $chroot_mount_target $ctcontainer_root/$container$chroot_mount_target
+            end
+        end
+    end
+    function chroot_mount_rw
+        for chroot_mount_target in $chroot_mount_point
+            if [ "$ctcontainer_log_level" = debug ]
+                logger 2 "Mounting $chroot_mount_target $ctcontainer_root/$container$chroot_mount_target"
+            end
+            if grep -qs "$ctcontainer_root/$container$chroot_mount_target" /proc/mounts
+            else
+                sudo mount -o bind,rw $chroot_mount_target $ctcontainer_root/$container$chroot_mount_target
+            end
+        end
+    end
+    setup_user_share
+    switch $ctcontainer_safety_level
+        case 0 -1
+            if [ "$ctcontainer_log_level" = debug ]
+                logger 2 'mount in read-write filesystem'
+            end
+            setup_user_xorg
+            setup_dbus
+            set chroot_mount_point /dev /dev/pts /proc /sys
+            if [ "$ctcontainer_log_level" = debug ]
+                logger 2 "set mount_point.essential_mount.run_chroot -> $chroot_mount_point"
+            end
+            chroot_mount_rw
+        case 1 2
+            if [ "$ctcontainer_log_level" = debug ]
+                logger 2 'mount in read-only filesystem'
+            end
+            setup_user_xorg
+            set chroot_mount_point /dev /dev/pts /proc /sys
+            if [ "$ctcontainer_log_level" = debug ]
+                logger 2 "set mount_point.essential_mount.run_chroot -> $chroot_mount_point"
+            end
+            chroot_mount_ro
+        case h '*'
+            logger 4 "can't understand what is $ctcontainer_safety_level,abort"
+            exit
+    end
+end
+function setup_user_xorg
+    if test -d $ctcontainer_root/$container/tmp/.X11-unix
+    else
+        sudo mkdir -p $ctcontainer_root/$container/tmp/.X11-unix
+    end
+    if command -q -v xhost
+        xhost +local:
+    else
+        set_color red
+        echo "$prefix [error] Xhost not found,xorg in container couldn't be set up,still try to mount the .X11-unix directory"
+        set_color normal
+    end
+    if grep -qs "$ctcontainer_root/$container/tmp/.X11-unix" /proc/mounts
+    else
+        sudo mount -o bind /tmp/.X11-unix $ctcontainer_root/$container/tmp/.X11-unix
+    end
+end
+function essential_umount
+    function chroot_umount
+        set chroot_mount_point /dev /proc /sys '/tmp/.X11-unix' /var/run/dbus /run/dbus "$XDG_RUNTIME_DIR" /ctcontainer_share
+        for chroot_umount_target in $chroot_mount_point
+            if grep -qs "$ctcontainer_root/$container$chroot_umount_target" /proc/mounts
+                sudo umount -l $ctcontainer_root/$container$chroot_umount_target
+            end
+        end
+        logger 1 Umountd
+    end
+    switch $ctcontainer_auto_umount
+        case 0
+            logger 3 "Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
+            read -n1 -P "$prefix >>> " _umount_
+            switch $_umount_
+                case n N
+                    logger 0 "I'm not going to umount it,exit chroot only"
+                case y Y '*'
+                    chroot_umount
+            end
+        case 1 '*'
+            chroot_umount
+    end
+end
+function setup_dbus
+    if test -d $ctcontainer_root/$container/var/run/dbus
+    else
+        sudo mkdir -p $ctcontainer_root/$container/var/run/dbus
+    end
+    if test -d $ctcontainer_root/$container$XDG_RUNTIME_DIR
+    else
+        sudo mkdir -p $ctcontainer_root/$container$XDG_RUNTIME_DIR
+    end
+    if grep -qs "$ctcontainer_root/$container/var/run/dbus" /proc/mounts
+    else
+        sudo mount -o bind /var/run/dbus $ctcontainer_root/$container/var/run/dbus
+    end
+    if grep -qs "$ctcontainer_root/$container$XDG_RUNTIME_DIR" /proc/mounts
+    else
+        sudo mount -o bind $XDG_RUNTIME_DIR $ctcontainer_root/$container$XDG_RUNTIME_DIR
+    end
+end
+echo Build_Time_UTC=2021-12-31_14:44:28
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -424,12 +460,17 @@ switch $argv[1]
     case init
         init $argv[2] $argv[3]
     case run
-        run $argv[2] $argv[3..-1]
+        switch $ctcontainer_backend
+            case chroot
+                chroot_run $argv[2] $argv[3..-1]
+            case nspawn
+                nspawn_run $argv[2] $argv[3..-1]
+        end
     case list
         list
     case v version
         set_color yellow
-        echo "FrostFlower@build8"
+        echo "FrostFlower@build21"
         set_color normal
     case install
         install ctcontainer
