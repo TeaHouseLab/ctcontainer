@@ -53,12 +53,17 @@ switch $argv[1]
     case init
         init $argv[2] $argv[3]
     case run
-        run $argv[2] $argv[3..-1]
+        switch $ctcontainer_backend
+            case chroot
+                chroot_run $argv[2] $argv[3..-1]
+            case nspawn
+                nspawn_run $argv[2] $argv[3..-1]
+        end
     case list
         list
     case v version
         set_color yellow
-        echo "FrostFlower@build8"
+        echo "FrostFlower@build21"
         set_color normal
     case install
         install ctcontainer

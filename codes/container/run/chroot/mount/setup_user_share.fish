@@ -7,8 +7,6 @@ function setup_user_share
     else
         sudo mkdir -p $ctcontainer_root/$container/ctcontainer_share
     end
-    set_color cyan
-    set_color normal
     if grep -qs "$ctcontainer_root/$container/ctcontainer_share" /proc/mounts
     else
     sudo mount -o bind $ctcontainer_share $ctcontainer_root/$container/ctcontainer_share
