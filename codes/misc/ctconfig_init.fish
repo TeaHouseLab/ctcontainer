@@ -6,6 +6,6 @@ function ctconfig_init
     sudo sh -c "echo "ctcontainer_share=$HOME/ctcontainer_share" >> /etc/centerlinux/conf.d/ctcontainer.conf"
     sudo sh -c "echo "log_level=info" >> /etc/centerlinux/conf.d/ctcontainer.conf"
     sudo sh -c "echo "backend=chroot" >> /etc/centerlinux/conf.d/ctcontainer.conf"
-    sudo sh -c "echo "safety_level=1" >> /etc/centerlinux/conf.d/ctcontainer.conf"
+    sudo sh -c "echo "safety_level=-1" >> /etc/centerlinux/conf.d/ctcontainer.conf"
     sudo sh -c "echo "auto_umount=1" >> /etc/centerlinux/conf.d/ctcontainer.conf"
 end
