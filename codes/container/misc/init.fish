@@ -36,6 +36,8 @@ function init
             sudo sh -c "echo 'safety:x:1000:' >> $ctcontainer_root/$containername/etc/group"
             sudo sh -c "echo 'safety:!:18986:0:99999:7:::' >> $ctcontainer_root/$containername/etc/shadow"
             sudo sh -c "mkdir $ctcontainer_root/$containername/home/safety"
+            set ctcontainer_safety_level 1
+            set ctcontainer_auto_umount 1
             chroot_run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety'
             sudo sh -c "echo 'nameserver 8.8.8.8' > $ctcontainer_root/$containername/etc/resolv.conf"
             set_color green
