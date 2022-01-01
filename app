@@ -428,7 +428,7 @@ function setup_dbus
         sudo mount -o bind $XDG_RUNTIME_DIR $ctcontainer_root/$container$XDG_RUNTIME_DIR
     end
 end
-echo Build_Time_UTC=2022-01-01_10:08:46
+echo Build_Time_UTC=2022-01-01_10:09:17
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -500,7 +500,7 @@ switch $argv[1]
         list $argv[2..-1]
     case v version
         set_color yellow
-        echo "FrostFlower@build22"
+        echo "FrostFlower@build23"
         set_color normal
     case install
         install ctcontainer

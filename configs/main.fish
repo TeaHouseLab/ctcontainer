@@ -69,7 +69,7 @@ switch $argv[1]
         list $argv[2..-1]
     case v version
         set_color yellow
-        echo "FrostFlower@build22"
+        echo "FrostFlower@build23"
         set_color normal
     case install
         install ctcontainer
