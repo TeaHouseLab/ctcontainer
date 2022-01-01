@@ -32,7 +32,10 @@ function help_echo
   set_color normal
   echo " -argv[1]:the command to execute"
   echo "  -Available:
-        list >>> list installed and Available container
+        list argv[2] argv[3] >>> list installed and Available container
+          argv[2]:installed: list deployed container
+                    argv[3]: size: count size of each container using du
+                  available: list available container in online repo
 
         run argv[2] argv[3]  >>> Run command in chroot
         argv[2]: the code of container
@@ -40,8 +43,9 @@ function help_echo
           --ctlog_level={debug,info}
           --ctauto_umount={0,1}
           --ctsafety_level={0,1,2}
+          --ctbackend={chroot,nspawn}
         init argv[2] (-f if you don't want the random container code) >>> Create a container
-        argv[2]: archlinux,alpinelinux,deepin-stable,debian-stable,debian-testing,debian-unstable,fedora35,manjarolinux,parrotsec-testing,ubuntu-impish
+        argv[2]: archlinux,alpinelinux,deepin-stable,debian-stable,debian-testing,debian-unstable,fedora35,kali-rolling,manjarolinux,parrotsec-testing,ubuntu-impish
 
         purge argv[2] >>> Destroy a container
         argv[2]: debian,debian-testing,debian-unstable,alpinelinux
@@ -114,7 +118,7 @@ function ctconfig_init
     sudo sh -c "echo "ctcontainer_share=$HOME/ctcontainer_share" >> /etc/centerlinux/conf.d/ctcontainer.conf"
     sudo sh -c "echo "log_level=info" >> /etc/centerlinux/conf.d/ctcontainer.conf"
     sudo sh -c "echo "backend=chroot" >> /etc/centerlinux/conf.d/ctcontainer.conf"
-    sudo sh -c "echo "safety_level=1" >> /etc/centerlinux/conf.d/ctcontainer.conf"
+    sudo sh -c "echo "safety_level=-1" >> /etc/centerlinux/conf.d/ctcontainer.conf"
     sudo sh -c "echo "auto_umount=1" >> /etc/centerlinux/conf.d/ctcontainer.conf"
 end
 function purge
@@ -138,11 +142,29 @@ function purge
     end
 end
 function list
-    echo ">Available<"
-    curl -s -L https://cdngit.ruzhtw.top/ctcontainer/available
-    echo
-    echo ">Installed<"
-    list_menu $ctcontainer_root
+    switch $argv[1]
+        case installed
+            switch $argv[2]
+                case size
+                    echo ">Installed<"
+                    for container in (list_menu $ctcontainer_root)
+                        printf "$container "
+                        sudo du -sh $ctcontainer_root/$container | awk '{ print $1 }'
+                    end
+                case '*'
+                    echo ">Installed<"
+                    list_menu $ctcontainer_root
+            end
+        case available
+            echo ">Available<"
+            curl -s -L https://cdngit.ruzhtw.top/ctcontainer/available
+        case '*'
+            echo ">Available<"
+            curl -s -L https://cdngit.ruzhtw.top/ctcontainer/available
+            echo
+            echo ">Installed<"
+            list_menu $ctcontainer_root
+    end
 end
 function init
     set container $argv[1]
@@ -182,7 +204,7 @@ function init
             sudo sh -c "echo 'safety:x:1000:' >> $ctcontainer_root/$containername/etc/group"
             sudo sh -c "echo 'safety:!:18986:0:99999:7:::' >> $ctcontainer_root/$containername/etc/shadow"
             sudo sh -c "mkdir $ctcontainer_root/$containername/home/safety"
-            run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety'
+            chroot_run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety'
             sudo sh -c "echo 'nameserver 8.8.8.8' > $ctcontainer_root/$containername/etc/resolv.conf"
             set_color green
             echo "$prefix $container deployed in $ctcontainer_root/$containername"
@@ -404,7 +426,7 @@ function setup_dbus
         sudo mount -o bind $XDG_RUNTIME_DIR $ctcontainer_root/$container$XDG_RUNTIME_DIR
     end
 end
-echo Build_Time_UTC=2021-12-31_14:44:28
+echo Build_Time_UTC=2022-01-01_03:03:46
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -467,10 +489,10 @@ switch $argv[1]
                 nspawn_run $argv[2] $argv[3..-1]
         end
     case list
-        list
+        list $argv[2..-1]
     case v version
         set_color yellow
-        echo "FrostFlower@build21"
+        echo "FrostFlower@build22"
         set_color normal
     case install
         install ctcontainer

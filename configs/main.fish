@@ -60,10 +60,10 @@ switch $argv[1]
                 nspawn_run $argv[2] $argv[3..-1]
         end
     case list
-        list
+        list $argv[2..-1]
     case v version
         set_color yellow
-        echo "FrostFlower@build21"
+        echo "FrostFlower@build22"
         set_color normal
     case install
         install ctcontainer
