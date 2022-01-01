@@ -26,7 +26,13 @@ else
     set_color normal
     sudo mkdir -p $ctcontainer_root
 end
-argparse -i -n $prefix ctlog_level= ctauto_umount= ctsafety_level= ctbackend= -- $argv
+argparse -i -n $prefix ctroot= ctshare= ctlog_level= ctauto_umount= ctsafety_level= ctbackend= -- $argv
+if set -q _flag_ctroot
+    set ctcontainer_root $_flag_ctroot
+end
+if set -q _flag_ctshare
+    set ctcontainer_share $_flag_ctshare
+end
 if set -q _flag_ctlog_level
     set ctcontainer_log_level $_flag_ctlog_level
 end
@@ -63,7 +69,7 @@ switch $argv[1]
         list $argv[2..-1]
     case v version
         set_color yellow
-        echo "FrostFlower@build22"
+        echo "FrostFlower@build23"
         set_color normal
     case install
         install ctcontainer
