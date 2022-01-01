@@ -428,7 +428,7 @@ function setup_dbus
         sudo mount -o bind $XDG_RUNTIME_DIR $ctcontainer_root/$container$XDG_RUNTIME_DIR
     end
 end
-echo Build_Time_UTC=2022-01-01_10:05:43
+echo Build_Time_UTC=2022-01-01_10:08:46
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -458,10 +458,10 @@ else
     sudo mkdir -p $ctcontainer_root
 end
 argparse -i -n $prefix ctroot= ctshare= ctlog_level= ctauto_umount= ctsafety_level= ctbackend= -- $argv
-if set -q _flag_ctlog_level
+if set -q _flag_ctroot
     set ctcontainer_root $_flag_ctroot
 end
-if set -q _flag_ctlog_level
+if set -q _flag_ctshare
     set ctcontainer_share $_flag_ctshare
 end
 if set -q _flag_ctlog_level
