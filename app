@@ -1,4 +1,5 @@
 #!/usr/bin/env fish
+
 function checkdependence
   if test -e $argv
     echo -e "\033[32m[checkdependence]check passed - $argv exist\033[0m"
@@ -25,6 +26,7 @@ end
 function list_menu
 ls $argv | sed '\~//~d'
 end
+
 function help_echo
   echo "==========Help Documentation=========="
   set_color green
@@ -53,6 +55,7 @@ function help_echo
         v version >>> Show version"
   echo "======================================"
 end
+
 function install
 set installname $argv[1]
   set dir (realpath (dirname (status -f)))
@@ -70,6 +73,7 @@ set installname $argv[1]
   echo "$prefix Removed"
   set_color normal
 end
+
 #!/usr/bin/env fish
 function logger-warn
   set_color magenta
@@ -110,6 +114,7 @@ case 4
   logger-error $argv[2..-1]
 end
 end
+
 function ctconfig_init
     set_color red
     echo "$prefix Detected First Launching,We need your password to create the config file"
@@ -121,6 +126,7 @@ function ctconfig_init
     sudo sh -c "echo "safety_level=-1" >> /etc/centerlinux/conf.d/ctcontainer.conf"
     sudo sh -c "echo "auto_umount=1" >> /etc/centerlinux/conf.d/ctcontainer.conf"
 end
+
 function purge
     for container in $argv[1..-1]
         cd $ctcontainer_root
@@ -141,6 +147,7 @@ function purge
         end
     end
 end
+
 function list
     switch $argv[1]
         case installed
@@ -166,6 +173,7 @@ function list
             list_menu $ctcontainer_root
     end
 end
+
 function init
     set container $argv[1]
     set containername $container
@@ -223,6 +231,7 @@ function init
         set_color normal
     end
 end
+
 function setup_dir_nspawn
     if test -d $ctcontainer_root/$container/var/run/dbus
     else
@@ -245,6 +254,7 @@ function setup_dir_nspawn
         sudo mkdir -p $ctcontainer_root/$container/ctcontainer_share
     end
 end
+
 function nspawn_run
     set -lx container $argv[1]
     if test -d $ctcontainer_root/$container
@@ -274,6 +284,7 @@ function nspawn_run
     end
     essential_umount
 end
+
 function chroot_run
     set -lx container $argv[1]
     set -lx chroot_mount_point
@@ -303,6 +314,7 @@ function chroot_run
     end
     essential_umount
 end
+
 function setup_user_share
     if test -d $ctcontainer_share
     else
@@ -317,6 +329,7 @@ function setup_user_share
     sudo mount -o bind $ctcontainer_share $ctcontainer_root/$container/ctcontainer_share
     end
 end
+
 function essential_mount
     logger 0 "Launching $container from $ctcontainer_root"
     function chroot_mount_ro
@@ -369,6 +382,7 @@ function essential_mount
             exit
     end
 end
+
 function setup_user_xorg
     if test -d $ctcontainer_root/$container/tmp/.X11-unix
     else
@@ -386,6 +400,7 @@ function setup_user_xorg
         sudo mount -o bind /tmp/.X11-unix $ctcontainer_root/$container/tmp/.X11-unix
     end
 end
+
 function essential_umount
     function chroot_umount
         set chroot_mount_point /dev /proc /sys '/tmp/.X11-unix' /var/run/dbus /run/dbus "$XDG_RUNTIME_DIR" /ctcontainer_share
@@ -410,6 +425,7 @@ function essential_umount
             chroot_umount
     end
 end
+
 function setup_dbus
     if test -d $ctcontainer_root/$container/var/run/dbus
     else
@@ -428,7 +444,8 @@ function setup_dbus
         sudo mount -o bind $XDG_RUNTIME_DIR $ctcontainer_root/$container$XDG_RUNTIME_DIR
     end
 end
-echo Build_Time_UTC=2022-01-01_10:09:17
+
+echo Build_Time_UTC=2022-01-08_08:33:19
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -500,7 +517,7 @@ switch $argv[1]
         list $argv[2..-1]
     case v version
         set_color yellow
-        echo "FrostFlower@build23"
+        echo "pomelo@build1"
         set_color normal
     case install
         install ctcontainer
