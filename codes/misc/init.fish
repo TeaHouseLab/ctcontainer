@@ -24,7 +24,7 @@ function init
             set containername $container$initraid
         end
     end
-    if sudo -E curl -s -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer/$container.tar.gz
+    if sudo -E curl --progress-bar -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer/$container.tar.gz
         set_color green
         echo "$prefix $container Package downloaded"
         set_color normal
