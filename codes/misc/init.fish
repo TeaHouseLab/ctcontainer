@@ -25,9 +25,13 @@ function init
         end
     end
     if sudo -E curl --progress-bar -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer/$container.tar.gz
-        set_color green
-        echo "$prefix $container Package downloaded"
-        set_color normal
+        if file $container.tar.gz | grep -q 'gzip compressed'
+            logger 1 "$container Package downloaded"
+        else
+            logger 4 "This is not a tarball,abort"
+            sudo rm -- $container.tar.gz
+            exit
+        end
         sudo mkdir -p $containername
         sudo mv $container.tar.gz $containername
         cd $containername
@@ -40,9 +44,10 @@ function init
             set ctcontainer_auto_umount 1
             chroot_run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety'
             cat /etc/resolv.conf | sudo tee "$ctcontainer_root/$containername/etc/resolv.conf" &>/dev/null
+            sudo rm $ctcontainer_root/$containername/
             logger 1 "$container deployed in $ctcontainer_root/$containername"
         else
-            sudo rm -rf $ctcontainer_root/$containername
+            sudo rm -rf $ctcontainer_root/$containername/$container.tar.gz
             logger 4 "Check your network and the name of container(use ctcontainer list to see all available distros)"
         end
     else
