@@ -65,11 +65,14 @@ switch $argv[1]
             case nspawn
                 nspawn_run $argv[2] $argv[3..-1]
         end
+    case load
+        set ctload true
+        chroot_run $argv[2] $argv[3..-1]
     case list
         list $argv[2..-1]
     case v version
         set_color yellow
-        echo "pomelo@build3"
+        echo "pomelo@build4"
         set_color normal
     case install
         install ctcontainer

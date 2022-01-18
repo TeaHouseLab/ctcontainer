@@ -39,6 +39,14 @@ function help_echo
                     argv[3]: size: count size of each container using du
                   available: list available container in online repo
 
+        load argv[2] argv[3] >>> Run command in chroot,but you can run custom rootfs
+        argv[2]: the path of rootfs
+        argv[3]: the executable in chroot
+          --ctlog_level={debug,info}
+          --ctauto_umount={0,1}
+          --ctsafety_level={0,1,2}
+          --ctbackend={chroot,nspawn}
+
         run argv[2] argv[3]  >>> Run command in chroot
         argv[2]: the code of container
         argv[3]: the executable in chroot
@@ -214,15 +222,11 @@ function init
             set ctcontainer_safety_level 1
             set ctcontainer_auto_umount 1
             chroot_run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety'
-            sudo sh -c "echo 'nameserver 8.8.8.8' > $ctcontainer_root/$containername/etc/resolv.conf"
-            set_color green
-            echo "$prefix $container deployed in $ctcontainer_root/$containername"
-            set_color normal
+            cat /etc/resolv.conf | sudo tee "$ctcontainer_root/$containername/etc/resolv.conf" &>/dev/null
+            logger 1 "$container deployed in $ctcontainer_root/$containername"
         else
             sudo rm -rf $ctcontainer_root/$containername
-            set_color red
-            echo "$prefix [error] Check your network and the name of container(use ctcontainer list to see all available distros)"
-            set_color normal
+            logger 4 "Check your network and the name of container(use ctcontainer list to see all available distros)"
         end
     else
         set_color red
@@ -287,6 +291,11 @@ end
 function chroot_run
     set -lx container $argv[1]
     set -lx chroot_mount_point
+    if [ "$ctload" = "true" ]
+        cd (dirname $argv[1])
+        set ctcontainer_root .
+        set container (basename $argv[1])
+    end
     if test -d $ctcontainer_root/$container
     else
         logger 4 "No such container exist,abort,check your containerlist,or probably there's a incorrect option is providered"
@@ -441,7 +450,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-01-17_07:44:12
+echo Build_Time_UTC=2022-01-18_04:16:14
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -509,11 +518,14 @@ switch $argv[1]
             case nspawn
                 nspawn_run $argv[2] $argv[3..-1]
         end
+    case load
+        set ctload true
+        chroot_run $argv[2] $argv[3..-1]
     case list
         list $argv[2..-1]
     case v version
         set_color yellow
-        echo "pomelo@build3"
+        echo "pomelo@build4"
         set_color normal
     case install
         install ctcontainer

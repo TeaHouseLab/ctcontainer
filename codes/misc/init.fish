@@ -39,15 +39,11 @@ function init
             set ctcontainer_safety_level 1
             set ctcontainer_auto_umount 1
             chroot_run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety'
-            sudo sh -c "echo 'nameserver 8.8.8.8' > $ctcontainer_root/$containername/etc/resolv.conf"
-            set_color green
-            echo "$prefix $container deployed in $ctcontainer_root/$containername"
-            set_color normal
+            cat /etc/resolv.conf | sudo tee "$ctcontainer_root/$containername/etc/resolv.conf" &>/dev/null
+            logger 1 "$container deployed in $ctcontainer_root/$containername"
         else
             sudo rm -rf $ctcontainer_root/$containername
-            set_color red
-            echo "$prefix [error] Check your network and the name of container(use ctcontainer list to see all available distros)"
-            set_color normal
+            logger 4 "Check your network and the name of container(use ctcontainer list to see all available distros)"
         end
     else
         set_color red

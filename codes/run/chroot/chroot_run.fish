@@ -1,6 +1,11 @@
 function chroot_run
     set -lx container $argv[1]
     set -lx chroot_mount_point
+    if [ "$ctload" = "true" ]
+        cd (dirname $argv[1])
+        set ctcontainer_root .
+        set container (basename $argv[1])
+    end
     if test -d $ctcontainer_root/$container
     else
         logger 4 "No such container exist,abort,check your containerlist,or probably there's a incorrect option is providered"

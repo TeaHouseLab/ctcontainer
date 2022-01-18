@@ -10,6 +10,14 @@ function help_echo
                     argv[3]: size: count size of each container using du
                   available: list available container in online repo
 
+        load argv[2] argv[3] >>> Run command in chroot,but you can run custom rootfs
+        argv[2]: the path of rootfs
+        argv[3]: the executable in chroot
+          --ctlog_level={debug,info}
+          --ctauto_umount={0,1}
+          --ctsafety_level={0,1,2}
+          --ctbackend={chroot,nspawn}
+
         run argv[2] argv[3]  >>> Run command in chroot
         argv[2]: the code of container
         argv[3]: the executable in chroot
