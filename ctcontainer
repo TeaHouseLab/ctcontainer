@@ -226,9 +226,9 @@ function init
             sudo sh -c "mkdir $ctcontainer_root/$containername/home/safety"
             set ctcontainer_safety_level 1
             set ctcontainer_auto_umount 1
-            chroot_run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety'
+            chroot_run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety && passwd -f -u safety && echo "ALL ALL=(ALL) ALL" | tee /etc/sudoers'
             cat /etc/resolv.conf | sudo tee "$ctcontainer_root/$containername/etc/resolv.conf" &>/dev/null
-            sudo rm $ctcontainer_root/$containername/
+            sudo rm $ctcontainer_root/$containername/$container.tar.gz
             logger 1 "$container deployed in $ctcontainer_root/$containername"
         else
             sudo rm -rf $ctcontainer_root/$containername/$container.tar.gz
@@ -414,11 +414,15 @@ end
 
 function essential_umount
     function chroot_umount
-        set chroot_mount_point /dev /proc /sys /var/run/dbus /run/dbus "$XDG_RUNTIME_DIR" /ctcontainer_share
+        set chroot_mount_point /dev/pts /dev /proc /sys /var/run/dbus /run/dbus "$XDG_RUNTIME_DIR" /ctcontainer_share
         for chroot_umount_target in $chroot_mount_point
             if grep -qs "$ctcontainer_root/$container$chroot_umount_target" /proc/mounts
                 sudo umount -l $ctcontainer_root/$container$chroot_umount_target
             end
+        end
+        if grep -qs /dev/pts /proc/mounts
+        else
+            sudo mount devpts /dev/pts -t devpts
         end
         logger 1 Umountd
     end
@@ -456,7 +460,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-01-18_12:51:17
+echo Build_Time_UTC=2022-01-20_07:51:30
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -531,7 +535,7 @@ switch $argv[1]
         list $argv[2..-1]
     case v version
         set_color yellow
-        echo "pomelo@build7"
+        echo "pomelo@build10"
         set_color normal
     case install
         install ctcontainer

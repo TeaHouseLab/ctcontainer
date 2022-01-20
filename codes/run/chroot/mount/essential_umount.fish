@@ -1,10 +1,14 @@
 function essential_umount
     function chroot_umount
-        set chroot_mount_point /dev /proc /sys /var/run/dbus /run/dbus "$XDG_RUNTIME_DIR" /ctcontainer_share
+        set chroot_mount_point /dev/pts /dev /proc /sys /var/run/dbus /run/dbus "$XDG_RUNTIME_DIR" /ctcontainer_share
         for chroot_umount_target in $chroot_mount_point
             if grep -qs "$ctcontainer_root/$container$chroot_umount_target" /proc/mounts
                 sudo umount -l $ctcontainer_root/$container$chroot_umount_target
             end
+        end
+        if grep -qs /dev/pts /proc/mounts
+        else
+            sudo mount devpts /dev/pts -t devpts
         end
         logger 1 Umountd
     end
