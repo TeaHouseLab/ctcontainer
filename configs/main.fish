@@ -72,7 +72,7 @@ switch $argv[1]
         list $argv[2..-1]
     case v version
         set_color yellow
-        echo "pomelo@build10"
+        echo "pomelo@build11"
         set_color normal
     case install
         install ctcontainer
