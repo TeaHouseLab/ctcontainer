@@ -1,23 +1,37 @@
 function checkdependence
-  if test -e $argv
-    echo -e "\033[32m[checkdependence]check passed - $argv exist\033[0m"
-  else
-    echo -e "\033[0;31m[checkdependence]check failed - plz install $argv\033[0m"
+set 34ylli8_deps_ok 1
+for 34ylli8_deps in $argv
+    if command -q -v $34ylli8_deps
+    else
+        set 34ylli8_deps_ok 0
+        if test -z "$34ylli8_dep_lost"
+            set 34ylli8_deps_lost "$34ylli8_deps $34ylli8_deps_lost"
+        else
+            set 34ylli8_deps_lost "$34ylli8_deps"
+        end
+    end
+end
+if test "$34ylli8_deps_ok" -eq 0
+    set_color red
+    echo "$prefix [error] "Please install "$34ylli8_deps_lost"to run this program""
+    set_color normal
     exit
-  end
+end
 end
 function checknetwork
   if curl -s -L $argv[1] | grep -q $argv[2]
-    echo -e "\033[32m[checknetwork]check passed - u`ve connected to $argv[1]\033[0m"
   else
-    echo -e "\033[0;31m[checknetwork]check failed - check your network connection\033[0m"
+    set_color red
+    echo "$prefix [error] [checknetwork] check failed - check your network connection"
+    set_color normal
   end
 end
 function dir_exist
   if test -d $argv[1]
-    echo -e "\033[32m[checkdir]check passed - dir $argv[1] exist\033[0m"
   else
-    echo -e "\033[0;31m[checkdir]check failed - dir $argv[1] doesn't exist,going to makr one\033[0m"
+    set_color red
+    echo "$prefix [error] [checkdir] check failed - dir $argv[1] doesn't exist,going to makr one"
+    set_color normal
     mkdir $argv[1]
   end
 end

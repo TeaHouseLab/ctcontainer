@@ -1,6 +1,6 @@
 function install
 set installname $argv[1]
-  set dir (realpath (dirname (status -f)))
+  set dir (pwd)
   set filename (status --current-filename)
   chmod +x $dir/$filename
   sudo cp $dir/$filename /usr/bin/$installname

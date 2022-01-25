@@ -1,4 +1,3 @@
-#!/usr/bin/env fish
 function logger-warn
   set_color magenta
   echo "$prefix [Warn] $argv[1..-1]"
@@ -21,7 +20,7 @@ function logger-debug
 end
 function logger-success
   set_color green
-  echo "$prefix [Successed] $argv[1..-1]"
+  echo "$prefix [Succeeded] $argv[1..-1]"
   set_color normal
 end
 function logger -d "a lib to print msg quickly"

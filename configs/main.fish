@@ -71,9 +71,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        set_color yellow
-        echo "pomelo@build11"
-        set_color normal
+        logger 0 "BlackDeath@build2"
     case install
         install ctcontainer
     case uninstall

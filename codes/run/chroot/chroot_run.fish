@@ -8,7 +8,7 @@ function chroot_run
     end
     if test -d $ctcontainer_root/$container
     else
-        logger 4 "No such container exist,abort,check your containerlist,or probably there's a incorrect option is providered"
+        logger 4 "Container $container does not exist,abort,check your containerlist,or probably there's a incorrect option is provided"
         exit
     end
     if [ "$argv[2..-1]" = "" ]

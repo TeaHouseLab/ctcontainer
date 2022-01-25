@@ -1,25 +1,39 @@
 #!/usr/bin/env fish
 
 function checkdependence
-  if test -e $argv
-    echo -e "\033[32m[checkdependence]check passed - $argv exist\033[0m"
-  else
-    echo -e "\033[0;31m[checkdependence]check failed - plz install $argv\033[0m"
+set 34ylli8_deps_ok 1
+for 34ylli8_deps in $argv
+    if command -q -v $34ylli8_deps
+    else
+        set 34ylli8_deps_ok 0
+        if test -z "$34ylli8_dep_lost"
+            set 34ylli8_deps_lost "$34ylli8_deps $34ylli8_deps_lost"
+        else
+            set 34ylli8_deps_lost "$34ylli8_deps"
+        end
+    end
+end
+if test "$34ylli8_deps_ok" -eq 0
+    set_color red
+    echo "$prefix [error] "Please install "$34ylli8_deps_lost"to run this program""
+    set_color normal
     exit
-  end
+end
 end
 function checknetwork
   if curl -s -L $argv[1] | grep -q $argv[2]
-    echo -e "\033[32m[checknetwork]check passed - u`ve connected to $argv[1]\033[0m"
   else
-    echo -e "\033[0;31m[checknetwork]check failed - check your network connection\033[0m"
+    set_color red
+    echo "$prefix [error] [checknetwork] check failed - check your network connection"
+    set_color normal
   end
 end
 function dir_exist
   if test -d $argv[1]
-    echo -e "\033[32m[checkdir]check passed - dir $argv[1] exist\033[0m"
   else
-    echo -e "\033[0;31m[checkdir]check failed - dir $argv[1] doesn't exist,going to makr one\033[0m"
+    set_color red
+    echo "$prefix [error] [checkdir] check failed - dir $argv[1] doesn't exist,going to makr one"
+    set_color normal
     mkdir $argv[1]
   end
 end
@@ -67,7 +81,7 @@ end
 
 function install
 set installname $argv[1]
-  set dir (realpath (dirname (status -f)))
+  set dir (pwd)
   set filename (status --current-filename)
   chmod +x $dir/$filename
   sudo cp $dir/$filename /usr/bin/$installname
@@ -83,7 +97,6 @@ set installname $argv[1]
   set_color normal
 end
 
-#!/usr/bin/env fish
 function logger-warn
   set_color magenta
   echo "$prefix [Warn] $argv[1..-1]"
@@ -106,7 +119,7 @@ function logger-debug
 end
 function logger-success
   set_color green
-  echo "$prefix [Successed] $argv[1..-1]"
+  echo "$prefix [Succeeded] $argv[1..-1]"
   set_color normal
 end
 function logger -d "a lib to print msg quickly"
@@ -226,7 +239,7 @@ function init
             sudo sh -c "mkdir $ctcontainer_root/$containername/home/safety"
             set ctcontainer_safety_level 1
             set ctcontainer_auto_umount 1
-            chroot_run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety && passwd -u safety && echo "ALL ALL=(ALL) ALL" | tee /etc/sudoers'
+            chroot_run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety && passwd -u safety && echo "ALL ALL=(ALL) ALL" | tee /etc/sudoers' &>/dev/null
             cat /etc/resolv.conf | sudo tee "$ctcontainer_root/$containername/etc/resolv.conf" &>/dev/null
             sudo rm $ctcontainer_root/$containername/$container.tar.gz
             logger 1 "$container deployed in $ctcontainer_root/$containername"
@@ -304,7 +317,7 @@ function chroot_run
     end
     if test -d $ctcontainer_root/$container
     else
-        logger 4 "No such container exist,abort,check your containerlist,or probably there's a incorrect option is providered"
+        logger 4 "Container $container does not exist,abort,check your containerlist,or probably there's a incorrect option is provided"
         exit
     end
     if [ "$argv[2..-1]" = "" ]
@@ -460,7 +473,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-01-20_07:54:09
+echo Build_Time_UTC=2022-01-25_14:07:44
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -534,9 +547,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        set_color yellow
-        echo "pomelo@build11"
-        set_color normal
+        logger 0 "BlackDeath@build2"
     case install
         install ctcontainer
     case uninstall
