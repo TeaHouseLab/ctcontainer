@@ -56,18 +56,22 @@ function help_echo
         load argv[2] argv[3] >>> Run command in chroot,but you can run custom rootfs
           argv[2]: the path of rootfs(like /opt/debian or debian/)
           argv[3]: the executable in chroot
-            --ctlog_level={debug,info}
-            --ctauto_umount={0,1}
-            --ctsafety_level={0,1,2}
-            --ctbackend={chroot,nspawn}
+            -r/--ctroot=
+            -s/--ctshare=
+            -l/--ctlog_level={debug,info}
+            -u/--ctauto_umount={0,1}
+            -p/--ctsafety_level={0,1,2}
+            -b/--ctbackend={chroot,nspawn}
 
         run argv[2] argv[3]  >>> Run command in chroot
           argv[2]: the code of container(use (./)ctcontainer list installed to know what you have installed)
           argv[3]: the executable in chroot
-            --ctlog_level={debug,info}
-            --ctauto_umount={0,1}
-            --ctsafety_level={0,1,2}
-            --ctbackend={chroot,nspawn}
+            -r/--ctroot=
+            -s/--ctshare=
+            -l/--ctlog_level={debug,info}
+            -u/--ctauto_umount={0,1}
+            -p/--ctsafety_level={0,1,2}
+            -b/--ctbackend={chroot,nspawn}
 
         init argv[2] (-f if you don't want the random container code) >>> Create a container
           argv[2]: use (./)ctcontainer list available to know what you can grab from online repo
@@ -239,7 +243,7 @@ function init
             sudo sh -c "mkdir $ctcontainer_root/$containername/home/safety"
             set ctcontainer_safety_level 1
             set ctcontainer_auto_umount 1
-            chroot_run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety && passwd -u safety && echo "ALL ALL=(ALL) ALL" | tee /etc/sudoers' &>/dev/null
+            chroot_run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety && passwd -u safety && echo "safety ALL=(ALL) ALL" | tee /etc/sudoers' &>/dev/null
             cat /etc/resolv.conf | sudo tee "$ctcontainer_root/$containername/etc/resolv.conf" &>/dev/null
             sudo rm $ctcontainer_root/$containername/$container.tar.gz
             logger 1 "$container deployed in $ctcontainer_root/$containername"
@@ -473,7 +477,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-01-25_14:07:44
+echo Build_Time_UTC=2022-01-30_05:45:53
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -502,7 +506,7 @@ else
     set_color normal
     sudo mkdir -p $ctcontainer_root
 end
-argparse -i -n $prefix ctroot= ctshare= ctlog_level= ctauto_umount= ctsafety_level= ctbackend= -- $argv
+argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' -- $argv
 if set -q _flag_ctroot
     set ctcontainer_root $_flag_ctroot
 end
@@ -547,7 +551,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 0 "BlackDeath@build2"
+        logger 0 "Begonia@build1"
     case install
         install ctcontainer
     case uninstall

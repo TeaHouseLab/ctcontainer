@@ -26,7 +26,7 @@ else
     set_color normal
     sudo mkdir -p $ctcontainer_root
 end
-argparse -i -n $prefix ctroot= ctshare= ctlog_level= ctauto_umount= ctsafety_level= ctbackend= -- $argv
+argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' -- $argv
 if set -q _flag_ctroot
     set ctcontainer_root $_flag_ctroot
 end
@@ -71,7 +71,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 0 "BlackDeath@build2"
+        logger 0 "Begonia@build1"
     case install
         install ctcontainer
     case uninstall
