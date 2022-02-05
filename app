@@ -243,7 +243,7 @@ function init
             sudo sh -c "mkdir $ctcontainer_root/$containername/home/safety"
             set ctcontainer_safety_level 1
             set ctcontainer_auto_umount 1
-            chroot_run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety && passwd -u safety && echo "safety ALL=(ALL) ALL" | tee /etc/sudoers' &>/dev/null
+            chroot_run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety && passwd -u safety && echo "safety    ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers' &>/dev/null
             cat /etc/resolv.conf | sudo tee "$ctcontainer_root/$containername/etc/resolv.conf" &>/dev/null
             sudo rm $ctcontainer_root/$containername/$container.tar.gz
             logger 1 "$container deployed in $ctcontainer_root/$containername"
@@ -477,7 +477,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-01-30_05:45:53
+echo Build_Time_UTC=2022-02-05_05:57:46
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -551,7 +551,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 0 "Begonia@build1"
+        logger 0 "Begonia@build2"
     case install
         install ctcontainer
     case uninstall
