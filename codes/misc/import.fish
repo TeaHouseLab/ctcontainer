@@ -33,7 +33,7 @@ function import
                 logger 4 "Abort."
                 exit
             case y Y '*'
-                rm -rf $ctcontainer_root/$containername
+                sudo rm -rf $ctcontainer_root/$containername
         end
     end
     if sudo cp -r $container $containername
