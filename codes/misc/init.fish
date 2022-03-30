@@ -1,28 +1,28 @@
 function init
     set container $argv[1]
     set containername $container
+    if [ "$ctcontainer_log_level" = debug ]
+        logger 2 "set container.init.ctcontainer -> $container"
+        logger 2 "set containername.init.ctcontainer -> $ctcontainername"
+    end
     if [ "$containername" = "" ]
-        set_color red
-        echo "$prefix [error] Nothing to init,abort"
-        set_color normal
+        logger 4 "Nothing to init,abort"
         exit
     end
-    set_color yellow
-    echo "$prefix Deploying..."
-    set_color normal
+    logger 1 "Deploying..."
     cd $ctcontainer_root
     if echo $argv[2] | grep -q -i '\-f'
-        set_color cyan
-        echo "$prefix [Info] Using origin name mode,container might be killed(coverd)"
-        set_color normal
+        logger 0 "Using origin name mode,container might be killed(coverd)"
     else
-        while test -d $container$initraid
-            set_color yellow
-            echo "$prefix [info] The random container name has existed,generating a new one"
-            set_color normal
+        while test -d $containername$initraid
+            logger 3 "The random container name has existed,generating a new one"
             set initraid (random 1000 1 9999)
-            set containername $container$initraid
+            set containername $containername$initraid
         end
+    end
+    if [ "$ctcontainer_log_level" = debug ]
+        logger 2 "set containername.import.ctcontainer -> $ctcontainername"
+        logger 2 "curl.init.ctcontainer ==> Grabbing https://cdngit.ruzhtw.top/ctcontainer/$container.tar.gz"
     end
     if sudo -E curl --progress-bar -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer/$container.tar.gz
         if file $container.tar.gz | grep -q 'gzip compressed'
@@ -51,8 +51,6 @@ function init
             logger 4 "Check your network and the name of container(use ctcontainer list to see all available distros)"
         end
     else
-        set_color red
-        echo "$prefix Failed,check your network connective"
-        set_color normal
+        logger 4 "Failed to download rootfs,check your network connective"
     end
 end

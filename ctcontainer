@@ -76,6 +76,10 @@ function help_echo
         init argv[2] (-f if you don't want the random container code) >>> Create a container
           argv[2]: use (./)ctcontainer list available to know what you can grab from online repo
 
+        import argv[2] (-f if you don't want the random container code) >>> Import a rootfs to root.ctcontainer
+          argv[2]: The real path of the rootfs
+          Example: (./)ctcontainer import /home/thl/tmp/fedora35 -f
+
         purge argv[2] >>> Destroy a container
           argv[2]: use (./)ctcontainer list installed to know what you have installed
         
@@ -162,6 +166,59 @@ function purge
     end
 end
 
+function import
+    set container $argv[1]
+    if [ "$container" = "" ]
+        set_color red
+        logger 4 "Nothing to import,abort"
+        set_color normal
+        exit
+    end
+    set containername (basename $container)
+    if [ "$ctcontainer_log_level" = debug ]
+        logger 2 "set rootfs.import.ctcontainer -> $container"
+        logger 2 "set containername.import.ctcontainer -> $containername"
+    end
+    logger 0 "Importing..."
+    cd $ctcontainer_root
+    if echo $argv[2] | grep -q -i '\-f'
+        logger 0 "Using origin name mode,container might be killed(coverd)"
+    else
+        while test -d $containername$initraid
+            logger 3 "The random container name has existed,generating a new one"
+            set initraid (random 1000 1 9999)
+            set containername $containername$initraid
+        end
+    end
+    if [ "$ctcontainer_log_level" = debug ]
+        logger 2 "set containername.import.ctcontainer -> $containername"
+    end
+    if test -d $containername
+        logger 3 "Found a folder which has the same name of container to import,purge it?[y/n]"
+        read -n1 -P "$prefix >>> " _purge_
+        switch $_purge_
+            case n N
+                logger 4 "Abort."
+                exit
+            case y Y '*'
+                rm -rf $ctcontainer_root/$containername
+        end
+    end
+    if sudo cp -r $container $containername
+        sudo sh -c "echo 'safety:x:1000:1000:Linux User,,,:/home/safety:/bin/sh' >> $ctcontainer_root/$containername/etc/passwd"
+        sudo sh -c "echo 'safety:x:1000:' >> $ctcontainer_root/$containername/etc/group"
+        sudo sh -c "echo 'safety:!:18986:0:99999:7:::' >> $ctcontainer_root/$containername/etc/shadow"
+        sudo sh -c "mkdir $ctcontainer_root/$containername/home/safety"
+        set ctcontainer_safety_level 1
+        set ctcontainer_auto_umount 1
+        chroot_run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety && passwd -u safety && echo "safety    ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers' &>/dev/null
+        cat /etc/resolv.conf | sudo tee "$ctcontainer_root/$containername/etc/resolv.conf" &>/dev/null
+        logger 1 "$container deployed in $ctcontainer_root/$containername"
+    else
+        logger 4 "Cannot copy the rootfs to root.ctcontainer,checkout the debug info and try to import again"
+    end
+end
+
 function ctconfig_init
     set_color red
     echo "$prefix Detected First Launching,We need your password to create the config file"
@@ -202,28 +259,28 @@ end
 function init
     set container $argv[1]
     set containername $container
+    if [ "$ctcontainer_log_level" = debug ]
+        logger 2 "set container.init.ctcontainer -> $container"
+        logger 2 "set containername.init.ctcontainer -> $ctcontainername"
+    end
     if [ "$containername" = "" ]
-        set_color red
-        echo "$prefix [error] Nothing to init,abort"
-        set_color normal
+        logger 4 "Nothing to init,abort"
         exit
     end
-    set_color yellow
-    echo "$prefix Deploying..."
-    set_color normal
+    logger 1 "Deploying..."
     cd $ctcontainer_root
     if echo $argv[2] | grep -q -i '\-f'
-        set_color cyan
-        echo "$prefix [Info] Using origin name mode,container might be killed(coverd)"
-        set_color normal
+        logger 0 "Using origin name mode,container might be killed(coverd)"
     else
-        while test -d $container$initraid
-            set_color yellow
-            echo "$prefix [info] The random container name has existed,generating a new one"
-            set_color normal
+        while test -d $containername$initraid
+            logger 3 "The random container name has existed,generating a new one"
             set initraid (random 1000 1 9999)
-            set containername $container$initraid
+            set containername $containername$initraid
         end
+    end
+    if [ "$ctcontainer_log_level" = debug ]
+        logger 2 "set containername.import.ctcontainer -> $ctcontainername"
+        logger 2 "curl.init.ctcontainer ==> Grabbing https://cdngit.ruzhtw.top/ctcontainer/$container.tar.gz"
     end
     if sudo -E curl --progress-bar -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer/$container.tar.gz
         if file $container.tar.gz | grep -q 'gzip compressed'
@@ -252,9 +309,7 @@ function init
             logger 4 "Check your network and the name of container(use ctcontainer list to see all available distros)"
         end
     else
-        set_color red
-        echo "$prefix Failed,check your network connective"
-        set_color normal
+        logger 4 "Failed to download rootfs,check your network connective"
     end
 end
 
@@ -477,7 +532,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-02-05_08:26:49
+echo Build_Time_UTC=2022-03-30_02:57:40
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -538,6 +593,8 @@ switch $argv[1]
         purge $argv[2..-1]
     case init
         init $argv[2] $argv[3]
+    case import
+        import $argv[2] $argv[3]
     case run
         switch $ctcontainer_backend
             case chroot
@@ -551,7 +608,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 0 "Begonia@build3"
+        logger 0 "Corleone@build1"
     case install
         install ctcontainer
     case uninstall

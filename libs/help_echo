@@ -33,6 +33,10 @@ function help_echo
         init argv[2] (-f if you don't want the random container code) >>> Create a container
           argv[2]: use (./)ctcontainer list available to know what you can grab from online repo
 
+        import argv[2] (-f if you don't want the random container code) >>> Import a rootfs to root.ctcontainer
+          argv[2]: The real path of the rootfs
+          Example: (./)ctcontainer import /home/thl/tmp/fedora35 -f
+
         purge argv[2] >>> Destroy a container
           argv[2]: use (./)ctcontainer list installed to know what you have installed
         

@@ -58,6 +58,8 @@ switch $argv[1]
         purge $argv[2..-1]
     case init
         init $argv[2] $argv[3]
+    case import
+        import $argv[2] $argv[3]
     case run
         switch $ctcontainer_backend
             case chroot
@@ -71,7 +73,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 0 "Begonia@build3"
+        logger 0 "Corleone@build1"
     case install
         install ctcontainer
     case uninstall
