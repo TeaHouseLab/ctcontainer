@@ -347,13 +347,13 @@ function nspawn_run
     essential_mount
     switch $ctcontainer_safety_level
         case -1
-            sudo systemd-nspawn -q -u safety -D $container env -C /home/safety XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
+            sudo systemd-nspawn --resolv-conf=off -q -u safety -D $container env -C /home/safety XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
         case 0
-            sudo systemd-nspawn -b -q -D $container
+            sudo systemd-nspawn --resolv-conf=off -b -q -D $container
         case 1
-            sudo systemd-nspawn -q -D $container env -C /root DISPLAY=:0 $argv[2..-1]
+            sudo systemd-nspawn --resolv-conf=off -q -D $container env -C /root DISPLAY=:0 $argv[2..-1]
         case 2
-            sudo systemd-nspawn -q -u safety -D $container env -C /home/safety HOME=/home/safety USER=safety $argv[2..-1]
+            sudo systemd-nspawn --resolv-conf=off -q -u safety -D $container env -C /home/safety HOME=/home/safety USER=safety $argv[2..-1]
         case h '*'
             logger 4 "can't understand what is $ctcontainer_safety_level,abort"
             exit
@@ -527,7 +527,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-05-07_04:04:43
+echo Build_Time_UTC=2022-05-09_05:52:06
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -551,9 +551,7 @@ else
 end
 if test -d $ctcontainer_root
 else
-    set_color red
     logger 4 "root.ctcontainer not found,try to create it under root"
-    set_color normal
     sudo mkdir -p $ctcontainer_root
 end
 argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' -- $argv
