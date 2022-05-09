@@ -42,49 +42,44 @@ ls $argv | sed '\~//~d'
 end
 
 function help_echo
-  echo "==========Help Documentation=========="
-  set_color green
-  echo "(./)app argv[1]"
-  set_color normal
-  echo " -argv[1]:the command to execute"
-  echo "  -Available:
-        list argv[2] argv[3] >>> list installed and Available container
-          argv[2]:installed: list deployed container
-                    argv[3]: size: count size of each container using du
-                  available: list available container in online repo
+ echo '
+(./)app [init, run, load, import, purge, list] argvs
 
-        load argv[2] argv[3] >>> Run command in chroot,but you can run custom rootfs
-          argv[2]: the path of rootfs(like /opt/debian or debian/)
-          argv[3]: the executable in chroot
-            -r/--ctroot=
-            -s/--ctshare=
-            -l/--ctlog_level={debug,info}
-            -u/--ctauto_umount={0,1}
-            -p/--ctsafety_level={0,1,2}
-            -b/--ctbackend={chroot,nspawn}
+    init: Pull a rootfs from cloud repo
+        Example: ctcontainer init debian-stable (-f)
+        Note: Add a -f after the name of your container will create it without prefix
 
-        run argv[2] argv[3]  >>> Run command in chroot
-          argv[2]: the code of container(use (./)ctcontainer list installed to know what you have installed)
-          argv[3]: the executable in chroot
-            -r/--ctroot=
-            -s/--ctshare=
-            -l/--ctlog_level={debug,info}
-            -u/--ctauto_umount={0,1}
-            -p/--ctsafety_level={0,1,2}
-            -b/--ctbackend={chroot,nspawn}
+    run: Run a program in a container
+        Example: ctcontainer run archlinux bash
 
-        init argv[2] (-f if you don't want the random container code) >>> Create a container
-          argv[2]: use (./)ctcontainer list available to know what you can grab from online repo
+    load: Run a program in a container in a rootfs out of ctcontainer root
 
-        import argv[2] (-f if you don't want the random container code) >>> Import a rootfs to root.ctcontainer
-          argv[2]: The real path of the rootfs
-          Example: (./)ctcontainer import /home/thl/tmp/fedora35 -f
+    import: Import a container into ctcontainer root
+        Example: ctcontainer import /home/thl/tmp/fedora35 (-f)
+        Note: [1]Add a -f after the name of your container will create it without prefix; [2]import source must be a specific path, you can`t use ./xxx.
 
-        purge argv[2] >>> Destroy a container
-          argv[2]: use (./)ctcontainer list installed to know what you have installed
-        
-        v version >>> Show version"
-  echo "======================================"
+    purge: Purge a container from ctcontainer root
+
+    list: List installed/available container
+        Example1: ctcontainer list installed (list installed container)
+        Example2: ctcontainer list installed size (list installed container, with their size sumup)
+        Example3: ctcontainer list available (list available rootfs on cloud repo)
+
+Argvs
+(./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level, -u/--ctauto_umount, -p/--ctsafety_level=, -b/--ctbackend=] commands
+
+    -r/--ctroot=: Force set a ctcontainer root directory
+
+    -s/--ctshare=: Force set a ctcontainer shared directory path
+
+    -l/--ctlog_level=: Force set the log_level, available{info, debug}
+
+    -u/--ctauto_umount=: Force set a value of auto umount, available{0, 1}
+
+    -p/--ctsafety_level=: Force set a safety level, available{-1, 0, 1, 2}
+
+    -b/--ctbackend=: Force set a ctcontainer backend, available{chroot, nspawn}
+'
 end
 
 function install
@@ -352,13 +347,13 @@ function nspawn_run
     essential_mount
     switch $ctcontainer_safety_level
         case -1
-            sudo systemd-nspawn -q -u safety -D $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
+            sudo systemd-nspawn -q -u safety -D $container env -C /home/safety XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
         case 0
             sudo systemd-nspawn -b -q -D $container
         case 1
-            sudo systemd-nspawn -q -D $container env DISPLAY=:0 $argv[2..-1]
+            sudo systemd-nspawn -q -D $container env -C /root DISPLAY=:0 $argv[2..-1]
         case 2
-            sudo systemd-nspawn -q -u safety -D $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
+            sudo systemd-nspawn -q -u safety -D $container env -C /home/safety HOME=/home/safety USER=safety $argv[2..-1]
         case h '*'
             logger 4 "can't understand what is $ctcontainer_safety_level,abort"
             exit
@@ -387,13 +382,13 @@ function chroot_run
     essential_mount
     switch $ctcontainer_safety_level
         case -1
-            sudo chroot --userspec safety:safety $container env --chdir=/home/safety XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety all_proxy=$all_proxy ftp_proxy=$ftp_proxy http_proxy=$http_proxy https_proxy=$https_proxy no_proxy=$no_proxy ALL_PROXY=$ALL_PROXY FTP_PROXY=$FTP_PROXY HTTPS_PROXY=$HTTPS_PROXY HTTP_PROXY=$HTTP_PROXY NO_PROXY=$NO_PROXY $argv[2..-1]
+            sudo unshare -impuCTf chroot --userspec safety:safety $container env -C /home/safety XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
         case 0
-            sudo chroot $container env --chdir=/root DISPLAY=:0 XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR all_proxy=$all_proxy ftp_proxy=$ftp_proxy http_proxy=$http_proxy https_proxy=$https_proxy no_proxy=$no_proxy ALL_PROXY=$ALL_PROXY FTP_PROXY=$FTP_PROXY HTTPS_PROXY=$HTTPS_PROXY HTTP_PROXY=$HTTP_PROXY NO_PROXY=$NO_PROXY $argv[2..-1]
+            sudo unshare -impuCTf chroot $container env -C /root DISPLAY=:0 XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR $argv[2..-1]
         case 1
-            sudo chroot $container env --chdir=/root DISPLAY=:0 all_proxy=$all_proxy ftp_proxy=$ftp_proxy http_proxy=$http_proxy https_proxy=$https_proxy no_proxy=$no_proxy ALL_PROXY=$ALL_PROXY FTP_PROXY=$FTP_PROXY HTTPS_PROXY=$HTTPS_PROXY HTTP_PROXY=$HTTP_PROXY NO_PROXY=$NO_PROXY $argv[2..-1]
+            sudo unshare -impuCTf chroot $container env -C /root DISPLAY=:0 $argv[2..-1]
         case 2
-            sudo chroot --userspec safety:safety $container env --chdir=/home/safety HOME=/home/safety USER=safety all_proxy=$all_proxy ftp_proxy=$ftp_proxy http_proxy=$http_proxy https_proxy=$https_proxy no_proxy=$no_proxy ALL_PROXY=$ALL_PROXY FTP_PROXY=$FTP_PROXY HTTPS_PROXY=$HTTPS_PROXY HTTP_PROXY=$HTTP_PROXY NO_PROXY=$NO_PROXY $argv[2..-1]
+            sudo unshare -impuCTf chroot --userspec safety:safety $container env -C /home/safety HOME=/home/safety USER=safety $argv[2..-1]
         case h '*'
             logger 4 "can't understand what is safety_level.ctcontainer{$ctcontainer_safety_level},abort"
             exit
@@ -532,7 +527,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-03-30_03:08:02
+echo Build_Time_UTC=2022-05-07_04:04:43
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -608,7 +603,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 0 "Corleone@build1"
+        logger 0 "Quicksand@build2"
     case install
         install ctcontainer
     case uninstall

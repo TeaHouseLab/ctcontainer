@@ -14,13 +14,13 @@ function nspawn_run
     essential_mount
     switch $ctcontainer_safety_level
         case -1
-            sudo systemd-nspawn -q -u safety -D $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
+            sudo systemd-nspawn --resolv-conf=off -q -u safety -D $container env -C /home/safety XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
         case 0
-            sudo systemd-nspawn -b -q -D $container
+            sudo systemd-nspawn --resolv-conf=off -b -q -D $container
         case 1
-            sudo systemd-nspawn -q -D $container env DISPLAY=:0 $argv[2..-1]
+            sudo systemd-nspawn --resolv-conf=off -q -D $container env -C /root DISPLAY=:0 $argv[2..-1]
         case 2
-            sudo systemd-nspawn -q -u safety -D $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
+            sudo systemd-nspawn --resolv-conf=off -q -u safety -D $container env -C /home/safety HOME=/home/safety USER=safety $argv[2..-1]
         case h '*'
             logger 4 "can't understand what is $ctcontainer_safety_level,abort"
             exit

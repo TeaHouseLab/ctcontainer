@@ -21,9 +21,7 @@ else
 end
 if test -d $ctcontainer_root
 else
-    set_color red
     logger 4 "root.ctcontainer not found,try to create it under root"
-    set_color normal
     sudo mkdir -p $ctcontainer_root
 end
 argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' -- $argv
@@ -73,7 +71,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 0 "Corleone@build1"
+        logger 0 "Quicksand@build2"
     case install
         install ctcontainer
     case uninstall

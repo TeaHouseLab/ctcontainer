@@ -1,45 +1,40 @@
 function help_echo
-  echo "==========Help Documentation=========="
-  set_color green
-  echo "(./)app argv[1]"
-  set_color normal
-  echo " -argv[1]:the command to execute"
-  echo "  -Available:
-        list argv[2] argv[3] >>> list installed and Available container
-          argv[2]:installed: list deployed container
-                    argv[3]: size: count size of each container using du
-                  available: list available container in online repo
+ echo '
+(./)app [init, run, load, import, purge, list] argvs
 
-        load argv[2] argv[3] >>> Run command in chroot,but you can run custom rootfs
-          argv[2]: the path of rootfs(like /opt/debian or debian/)
-          argv[3]: the executable in chroot
-            -r/--ctroot=
-            -s/--ctshare=
-            -l/--ctlog_level={debug,info}
-            -u/--ctauto_umount={0,1}
-            -p/--ctsafety_level={0,1,2}
-            -b/--ctbackend={chroot,nspawn}
+    init: Pull a rootfs from cloud repo
+        Example: ctcontainer init debian-stable (-f)
+        Note: Add a -f after the name of your container will create it without prefix
 
-        run argv[2] argv[3]  >>> Run command in chroot
-          argv[2]: the code of container(use (./)ctcontainer list installed to know what you have installed)
-          argv[3]: the executable in chroot
-            -r/--ctroot=
-            -s/--ctshare=
-            -l/--ctlog_level={debug,info}
-            -u/--ctauto_umount={0,1}
-            -p/--ctsafety_level={0,1,2}
-            -b/--ctbackend={chroot,nspawn}
+    run: Run a program in a container
+        Example: ctcontainer run archlinux bash
 
-        init argv[2] (-f if you don't want the random container code) >>> Create a container
-          argv[2]: use (./)ctcontainer list available to know what you can grab from online repo
+    load: Run a program in a container in a rootfs out of ctcontainer root
 
-        import argv[2] (-f if you don't want the random container code) >>> Import a rootfs to root.ctcontainer
-          argv[2]: The real path of the rootfs
-          Example: (./)ctcontainer import /home/thl/tmp/fedora35 -f
+    import: Import a container into ctcontainer root
+        Example: ctcontainer import /home/thl/tmp/fedora35 (-f)
+        Note: [1]Add a -f after the name of your container will create it without prefix; [2]import source must be a specific path, you can`t use ./xxx.
 
-        purge argv[2] >>> Destroy a container
-          argv[2]: use (./)ctcontainer list installed to know what you have installed
-        
-        v version >>> Show version"
-  echo "======================================"
+    purge: Purge a container from ctcontainer root
+
+    list: List installed/available container
+        Example1: ctcontainer list installed (list installed container)
+        Example2: ctcontainer list installed size (list installed container, with their size sumup)
+        Example3: ctcontainer list available (list available rootfs on cloud repo)
+
+Argvs
+(./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level, -u/--ctauto_umount, -p/--ctsafety_level=, -b/--ctbackend=] commands
+
+    -r/--ctroot=: Force set a ctcontainer root directory
+
+    -s/--ctshare=: Force set a ctcontainer shared directory path
+
+    -l/--ctlog_level=: Force set the log_level, available{info, debug}
+
+    -u/--ctauto_umount=: Force set a value of auto umount, available{0, 1}
+
+    -p/--ctsafety_level=: Force set a safety level, available{-1, 0, 1, 2}
+
+    -b/--ctbackend=: Force set a ctcontainer backend, available{chroot, nspawn}
+'
 end
