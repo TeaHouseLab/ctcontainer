@@ -42,7 +42,7 @@ function init
             sudo sh -c "mkdir $ctcontainer_root/$containername/home/safety"
             set ctcontainer_safety_level 1
             set ctcontainer_auto_umount 1
-            chroot_run $containername sh -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety && passwd -u safety && echo "safety    ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers' &>/dev/null
+            chroot_run $containername /bin/sh --login -c 'chown -R safety:safety /home/safety && chmod -R 755 /home/safety && passwd -u safety && echo "safety    ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers' &>/dev/null
             cat /etc/resolv.conf | sudo tee "$ctcontainer_root/$containername/etc/resolv.conf" &>/dev/null
             sudo rm $ctcontainer_root/$containername/$container.tar.gz
             logger 1 "$container deployed in $ctcontainer_root/$containername"
