@@ -382,7 +382,7 @@ function chroot_run
     essential_mount
     switch $ctcontainer_safety_level
         case -1
-            sudo unshare -impuCTf chroot --userspec safety:safety $container XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
+            sudo unshare -impuCTf chroot --userspec safety:safety $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
         case 0
             sudo unshare -impuCTf chroot $container env DISPLAY=:0 XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR $argv[2..-1]
         case 1
@@ -527,7 +527,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-05-27_06:47:03
+echo Build_Time_UTC=2022-05-27_06:52:49
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
