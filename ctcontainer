@@ -275,10 +275,10 @@ function init
     end
     if [ "$ctcontainer_log_level" = debug ]
         logger 2 "set containername.import.ctcontainer -> $ctcontainername"
-        logger 2 "curl.init.ctcontainer ==> Grabbing https://cdngit.ruzhtw.top/ctcontainer/$container.tar.gz"
+        logger 2 "curl.init.ctcontainer ==> Grabbing https://cdngit.ruzhtw.top/ctcontainer/$container"
     end
-    if sudo -E curl --progress-bar -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer/$container.tar.gz
-        if file $container.tar.gz | grep -q 'gzip compressed'
+    if sudo -E curl --progress-bar -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer/$container
+        if file $container.tar.gz | grep -q 'compressed'
             logger 1 "$container Package downloaded"
         else
             logger 4 "This is not a tarball,abort"
@@ -527,7 +527,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-05-09_05:52:06
+echo Build_Time_UTC=2022-05-27_06:04:58
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -601,7 +601,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 0 "Quicksand@build2"
+        logger 0 "Quicksand@build3"
     case install
         install ctcontainer
     case uninstall

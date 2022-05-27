@@ -71,7 +71,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 0 "Quicksand@build2"
+        logger 0 "Quicksand@build3"
     case install
         install ctcontainer
     case uninstall

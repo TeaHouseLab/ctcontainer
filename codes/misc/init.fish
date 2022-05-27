@@ -22,10 +22,10 @@ function init
     end
     if [ "$ctcontainer_log_level" = debug ]
         logger 2 "set containername.import.ctcontainer -> $ctcontainername"
-        logger 2 "curl.init.ctcontainer ==> Grabbing https://cdngit.ruzhtw.top/ctcontainer/$container.tar.gz"
+        logger 2 "curl.init.ctcontainer ==> Grabbing https://cdngit.ruzhtw.top/ctcontainer/$container"
     end
-    if sudo -E curl --progress-bar -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer/$container.tar.gz
-        if file $container.tar.gz | grep -q 'gzip compressed'
+    if sudo -E curl --progress-bar -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer/$container
+        if file $container.tar.gz | grep -q 'compressed'
             logger 1 "$container Package downloaded"
         else
             logger 4 "This is not a tarball,abort"
