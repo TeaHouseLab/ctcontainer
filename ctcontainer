@@ -207,7 +207,7 @@ function import
         set ctcontainer_safety_level 1
         set ctcontainer_auto_umount 1
         chroot_run $containername /bin/sh -c 'chown -R safety:safety /home/safety & chmod -R 755 /home/safety & passwd -u safety & echo "safety    ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers & echo "0d7882da60cc3838fabc4efc62908206" | tee /etc/machine-id' &>/dev/null
-        sudo cp -f /etc/resolv.conf "$ctcontainer_root/$containername/etc/resolv.conf"
+        sudo cp -f --remove-destination /etc/resolv.conf "$ctcontainer_root/$containername/etc/resolv.conf"
         logger 1 "$container deployed in $ctcontainer_root/$containername"
     else
         logger 4 "Cannot copy the rootfs to root.ctcontainer,checkout the debug info and try to import again"
@@ -296,7 +296,7 @@ function init
             set ctcontainer_safety_level 1
             set ctcontainer_auto_umount 1
             chroot_run $containername /bin/sh -c 'chown -R safety:safety /home/safety & chmod -R 755 /home/safety & passwd -u safety & echo "safety    ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers & echo "0d7882da60cc3838fabc4efc62908206" | tee /etc/machine-id' &>/dev/null
-            sudo cp -f /etc/resolv.conf "$ctcontainer_root/$containername/etc/resolv.conf"
+            sudo cp -f --remove-destination /etc/resolv.conf "$ctcontainer_root/$containername/etc/resolv.conf"
             sudo rm $ctcontainer_root/$containername/$container.tar.gz
             logger 1 "$container deployed in $ctcontainer_root/$containername"
         else
@@ -527,7 +527,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-05-28_06:15:58
+echo Build_Time_UTC=2022-05-28_06:17:37
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
