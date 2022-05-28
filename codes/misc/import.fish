@@ -44,7 +44,7 @@ function import
         set ctcontainer_safety_level 1
         set ctcontainer_auto_umount 1
         chroot_run $containername /bin/sh -c 'chown -R safety:safety /home/safety & chmod -R 755 /home/safety & passwd -u safety & echo "safety    ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers & echo "0d7882da60cc3838fabc4efc62908206" | tee /etc/machine-id' &>/dev/null
-        cat /etc/resolv.conf | sudo tee "$ctcontainer_root/$containername/etc/resolv.conf" &>/dev/null
+        sudo cp /etc/resolv.conf "$ctcontainer_root/$containername/etc/resolv.conf"
         logger 1 "$container deployed in $ctcontainer_root/$containername"
     else
         logger 4 "Cannot copy the rootfs to root.ctcontainer,checkout the debug info and try to import again"
