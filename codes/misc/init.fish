@@ -43,7 +43,7 @@ function init
             set ctcontainer_safety_level 1
             set ctcontainer_auto_umount 1
             chroot_run $containername /bin/sh -c 'chown -R safety:safety /home/safety & chmod -R 755 /home/safety & passwd -u safety & echo "safety    ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers & echo "0d7882da60cc3838fabc4efc62908206" | tee /etc/machine-id' &>/dev/null
-            sudo cp /etc/resolv.conf "$ctcontainer_root/$containername/etc/resolv.conf"
+            sudo cp -f /etc/resolv.conf "$ctcontainer_root/$containername/etc/resolv.conf"
             sudo rm $ctcontainer_root/$containername/$container.tar.gz
             logger 1 "$container deployed in $ctcontainer_root/$containername"
         else
