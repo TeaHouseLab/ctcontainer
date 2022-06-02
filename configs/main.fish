@@ -55,9 +55,9 @@ switch $argv[1]
     case purge
         purge $argv[2..-1]
     case init
-        init $argv[2] $argv[3]
+        init $argv[2..-1]
     case import
-        import $argv[2] $argv[3]
+        import $argv[2..-1]
     case run
         switch $ctcontainer_backend
             case chroot
@@ -67,11 +67,16 @@ switch $argv[1]
         end
     case load
         set ctload true
-        chroot_run $argv[2] $argv[3..-1]
+        switch $ctcontainer_backend
+            case chroot
+                chroot_run $argv[2] $argv[3..-1]
+            case nspawn
+                nspawn_run $argv[2] $argv[3..-1]
+        end
     case list
         list $argv[2..-1]
     case v version
-        logger 0 "Quicksand@build4"
+        logger 0 "Quicksand@build5"
     case install
         install ctcontainer
     case uninstall
