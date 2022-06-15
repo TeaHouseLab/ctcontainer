@@ -345,20 +345,22 @@ function nspawn_run
         exit
     end
     setup_dir_nspawn
+    essential_mount
     cd $ctcontainer_root
     switch $ctcontainer_safety_level
         case -1
-            sudo systemd-nspawn --resolv-conf=off -q -u safety -D $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
+            sudo systemd-nspawn --resolv-conf=off -q -u safety -D $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR DISPLAY=:0 HOME=/home/safety USER=safety $argv[2..-1]
         case 0
             sudo systemd-nspawn --resolv-conf=off -b -q -D $container
         case 1
             sudo systemd-nspawn --resolv-conf=off -q -D $container env DISPLAY=:0 $argv[2..-1]
         case 2
-            sudo systemd-nspawn --resolv-conf=off -q -u safety -D $container env HOME=/home/safety USER=safety $argv[2..-1]
+            sudo systemd-nspawn --resolv-conf=off -q -u safety -D $container env DISPLAY=:0 HOME=/home/safety USER=safety $argv[2..-1]
         case h '*'
             logger 4 "can't understand what is $ctcontainer_safety_level,abort"
             exit
     end
+    essential_umount
 end
 
 function chroot_run
@@ -382,13 +384,13 @@ function chroot_run
     essential_mount
     switch $ctcontainer_safety_level
         case -1
-            sudo unshare -impuCTf chroot --userspec safety:safety $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR HOME=/home/safety USER=safety $argv[2..-1]
+            sudo unshare -impuCTf chroot --userspec safety:safety $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR DISPLAY=:0 HOME=/home/safety USER=safety $argv[2..-1]
         case 0
             sudo unshare -impuCTf chroot $container env DISPLAY=:0 XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR $argv[2..-1]
         case 1
             sudo unshare -impuCTf chroot $container env DISPLAY=:0 $argv[2..-1]
         case 2
-            sudo unshare -impuCTf chroot --userspec safety:safety $container env HOME=/home/safety USER=safety $argv[2..-1]
+            sudo unshare -impuCTf chroot --userspec safety:safety $container env DISPLAY=:0 HOME=/home/safety USER=safety $argv[2..-1]
         case h '*'
             logger 4 "can't understand what is safety_level.ctcontainer{$ctcontainer_safety_level},abort"
             exit
@@ -527,7 +529,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-06-02_03:05:27
+echo Build_Time_UTC=2022-06-15_12:52:13
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
