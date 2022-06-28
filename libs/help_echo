@@ -39,5 +39,7 @@ Argvs
     -p/--ctsafety_level=: Force set a safety level, available{-1, 0, 1, 2}
 
     -b/--ctbackend=: Force set a ctcontainer backend, available{chroot, nspawn}
+
+    Note: These arg must be put in the first three positions
 '
 end

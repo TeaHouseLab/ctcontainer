@@ -3,18 +3,12 @@ function purge
         cd $ctcontainer_root
         if test -d $container
             if sudo rm -rf $container
-                set_color green
-                echo "$prefix Purged $container"
-                set_color normal
+                logger 2 "$container has been purged"
             else
-                set_color red
-                echo "$prefix Ouch!Something went wrong at {ctcontainer.purge.rm}"
-                set_color normal
+                logger 5 "Ouch!Something went wrong at purge.ctcontainer"
             end
         else
-            set_color red
-            echo "$prefix [error]No such container in root.ctcontainer"
-            set_color normal
+            logger 5 "No such container in root.ctcontainer"
         end
     end
 end

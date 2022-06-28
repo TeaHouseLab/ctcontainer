@@ -24,7 +24,7 @@ else
     logger 4 "root.ctcontainer not found,try to create it under root"
     sudo mkdir -p $ctcontainer_root
 end
-argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' -- $argv
+argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' -- $argv[1..3]
 if set -q _flag_ctroot
     set ctcontainer_root $_flag_ctroot
 end
@@ -44,12 +44,12 @@ if set -q _flag_ctbackend
     set ctcontainer_backend $_flag_ctbackend
 end
 if [ "$ctcontainer_log_level" = debug ]
-    logger 2 "set root.ctcontainer -> $ctcontainer_root"
-    logger 2 "set share.ctcontainer -> $ctcontainer_share"
-    logger 2 "set log_level.ctcontainer -> $ctcontainer_log_level"
-    logger 2 "set backend.ctcontainer -> $ctcontainer_backend"
-    logger 2 "set safety_level.ctcontainer -> $ctcontainer_safety_level"
-    logger 2 "set auto_umount.ctcontainer -> $ctcontainer_auto_umount"
+    logger 3 "set root.ctcontainer -> $ctcontainer_root"
+    logger 3 "set share.ctcontainer -> $ctcontainer_share"
+    logger 3 "set log_level.ctcontainer -> $ctcontainer_log_level"
+    logger 3 "set backend.ctcontainer -> $ctcontainer_backend"
+    logger 3 "set safety_level.ctcontainer -> $ctcontainer_safety_level"
+    logger 3 "set auto_umount.ctcontainer -> $ctcontainer_auto_umount"
 end
 switch $argv[1]
     case purge
@@ -76,7 +76,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 0 "Quicksand@build5"
+        logger 1 "Hairpin@build1"
     case install
         install ctcontainer
     case uninstall

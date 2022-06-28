@@ -1,39 +1,46 @@
 function logger-warn
   set_color magenta
-  echo "$prefix [Warn] $argv[1..-1]"
+  echo "$prefix ! $argv[1..-1]"
   set_color normal
 end
 function logger-error
   set_color red
-  echo "$prefix [Error] $argv[1..-1]"
+  echo "$prefix x $argv[1..-1]"
   set_color normal
 end
-function logger-info
+function logger-info-start
   set_color normal
-  echo "$prefix [Info] $argv[1..-1]"
+  echo "$prefix + $argv[1..-1]"
+  set_color normal
+end
+function logger-info-end
+  set_color normal
+  echo "$prefix - $argv[1..-1]"
   set_color normal
 end
 function logger-debug
   set_color yellow
-  echo "$prefix [Debug] $argv[1..-1]"
+  echo "$prefix ? $argv[1..-1]"
   set_color normal
 end
 function logger-success
   set_color green
-  echo "$prefix [Succeeded] $argv[1..-1]"
+  echo "$prefix √ $argv[1..-1]"
   set_color normal
 end
 function logger -d "a lib to print msg quickly"
 switch $argv[1]
 case 0
-  logger-info $argv[2..-1]
+  logger-info-start $argv[2..-1]
 case 1
-  logger-success $argv[2..-1]
+  logger-info-end $argv[2..-1]
 case 2
-  logger-debug $argv[2..-1]
+  logger-success $argv[2..-1]
 case 3
-  logger-warn $argv[2..-1]
+  logger-debug $argv[2..-1]
 case 4
+  logger-warn $argv[2..-1]
+case 5
   logger-error $argv[2..-1]
 end
 end

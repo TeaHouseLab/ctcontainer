@@ -10,7 +10,7 @@ function essential_umount
         else
             sudo mount devpts /dev/pts -t devpts
         end
-        logger 1 Umountd
+        logger 1 "Umountd"
     end
     switch $ctcontainer_auto_umount
         case 0
@@ -18,7 +18,7 @@ function essential_umount
             read -n1 -P "$prefix >>> " _umount_
             switch $_umount_
                 case n N
-                    logger 0 "I'm not going to umount it,exit chroot only"
+                    logger 1 "I'm not going to umount it,exit chroot only"
                 case y Y '*'
                     chroot_umount
             end

@@ -1,18 +1,21 @@
 function nspawn_run
     set -lx container $argv[1]
-    if [ "$ctload" = "true" ]
+    if [ "$ctload" = true ]
         cd (dirname $argv[1])
         set ctcontainer_root .
         set container (basename $argv[1])
     end
     if test -d $ctcontainer_root/$container
     else
-        logger 4 "No such container exist,abort,check your containerlist,or probably there's a incorrect option is providered"
+        logger 5 "No such container exist,abort,check your containerlist,or probably there's a incorrect option is providered"
         exit
     end
     if [ "$argv[2..-1]" = "" ]
-        logger 4 "Nothing to run,abort"
-        exit
+        if test "$ctcontainer_safety_level" = 0
+        else
+            logger 5 "Nothing to run,abort"
+            exit
+        end
     end
     setup_dir_nspawn
     setup_user_xorg
@@ -27,7 +30,7 @@ function nspawn_run
         case 2
             sudo systemd-nspawn --resolv-conf=off -q -u safety -D $container env DISPLAY=:0 HOME=/home/safety USER=safety $argv[2..-1]
         case h '*'
-            logger 4 "can't understand what is $ctcontainer_safety_level,abort"
+            logger 5 "can't understand what is $ctcontainer_safety_level,abort"
             exit
     end
 end

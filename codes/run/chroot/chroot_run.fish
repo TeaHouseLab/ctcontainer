@@ -8,11 +8,11 @@ function chroot_run
     end
     if test -d $ctcontainer_root/$container
     else
-        logger 4 "Container $container does not exist,abort,check your containerlist,or probably there's a incorrect option is provided"
+        logger 5 "Container $container does not exist,abort,check your containerlist,or probably there's a incorrect option is provided"
         exit
     end
     if [ "$argv[2..-1]" = "" ]
-        logger 4 "Nothing to run,abort"
+        logger 5 "Nothing to run,abort"
         exit
     end
     cd $ctcontainer_root
@@ -27,7 +27,7 @@ function chroot_run
         case 2
             sudo unshare -impuCTf chroot --userspec safety:safety $container env DISPLAY=:0 HOME=/home/safety USER=safety $argv[2..-1]
         case h '*'
-            logger 4 "can't understand what is safety_level.ctcontainer{$ctcontainer_safety_level},abort"
+            logger 5 "Can't understand what is safety_level.ctcontainer{$ctcontainer_safety_level},abort"
             exit
     end
     essential_umount

@@ -3,23 +3,23 @@ function list
         case installed
             switch $argv[2]
                 case size
-                    echo ">Installed<"
+                    logger 1 "Installed"
                     for container in (list_menu $ctcontainer_root)
                         printf "$container "
                         sudo du -sh $ctcontainer_root/$container | awk '{ print $1 }'
                     end
                 case '*'
-                    echo ">Installed<"
+                    logger 1 "Installed"
                     list_menu $ctcontainer_root
             end
         case available
-            echo ">Available<"
+            Logger 1 "Available"
             curl -s -L https://cdngit.ruzhtw.top/ctcontainer/available
         case '*'
-            echo ">Available<"
+            logger 1 "Available"
             curl -s -L https://cdngit.ruzhtw.top/ctcontainer/available
             echo
-            echo ">Installed<"
+            logger 1 "Installed"
             list_menu $ctcontainer_root
     end
 end
