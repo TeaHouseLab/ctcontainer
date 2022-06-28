@@ -24,7 +24,7 @@ else
     logger 4 "root.ctcontainer not found,try to create it under root"
     sudo mkdir -p $ctcontainer_root
 end
-argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' -- $argv[1..3]
+argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' -- $argv
 if set -q _flag_ctroot
     set ctcontainer_root $_flag_ctroot
 end

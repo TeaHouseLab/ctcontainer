@@ -40,6 +40,6 @@ Argvs
 
     -b/--ctbackend=: Force set a ctcontainer backend, available{chroot, nspawn}
 
-    Note: These arg must be put in the first three positions
+    Note: These arg must be put before any commands
 '
 end
