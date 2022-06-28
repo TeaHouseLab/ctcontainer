@@ -4,7 +4,10 @@ function help_echo
 
     init: Pull a rootfs from cloud repo
         Example: ctcontainer init debian-stable (-f)
-        Note: Add a -f after the name of your container will create it without prefix
+        Argvs [-f/--forcename, -n/--name]
+        -f/--forcename: Create your container without prefix
+        -n/--name: Create your container with a custom name
+        (Note: If a container already exist, it will directly overwrite it if you specific a name or create it without prefix)
 
     run: Run a program in a container
         Example: ctcontainer run archlinux bash

@@ -11,7 +11,7 @@ function init
     end
     logger 0 "Deploying..."
     cd $ctcontainer_root
-    argparse -i -n $prefix f/forcename -- $argv
+    argparse -i -n $prefix f/forcename 'n/name=' -- $argv
     if set -q _flag_forcename
         logger 3 "Using forcename mode,container might be killed(coverd)"
     else
@@ -19,6 +19,15 @@ function init
             logger 3 "The container name has existed,generating a new one"
             set initraid (random 1000 1 9999)
             set containername $containername$initraid
+        end
+    end
+    if set -q _flag_name
+        logger 3 "Using custom name mode,container might be killed(coverd)"
+        if test "$_flag_name" = ""
+            logger 4 "You can't create a container without a name, abort"
+            exit
+        else
+            set containername $_flag_name
         end
     end
     if [ "$ctcontainer_log_level" = debug ]
