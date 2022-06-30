@@ -251,7 +251,7 @@ function list
                     list_menu $ctcontainer_root
             end
         case available
-            Logger 1 "Available"
+            logger 1 "Available"
             curl -s -L https://cdngit.ruzhtw.top/ctcontainer/available
         case '*'
             logger 1 "Available"
@@ -553,7 +553,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-06-28_06:09:41
+echo Build_Time_UTC=2022-06-30_00:38:37
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share

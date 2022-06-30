@@ -13,7 +13,7 @@ function list
                     list_menu $ctcontainer_root
             end
         case available
-            Logger 1 "Available"
+            logger 1 "Available"
             curl -s -L https://cdngit.ruzhtw.top/ctcontainer/available
         case '*'
             logger 1 "Available"
