@@ -596,18 +596,11 @@ function essential_umount
         else
             sudo mount devpts /dev/pts -t devpts
         end
-        logger 1 "Umountd"
+        logger 1 Umountd
     end
     switch $ctcontainer_auto_umount
         case 0
-            logger 3 "Do you want to umount bind mounts(if another same container is running,choose no)[y/n]"
-            read -n1 -P "$prefix >>> " _umount_
-            switch $_umount_
-                case n N
-                    logger 1 "I'm not going to umount it,exit chroot only"
-                case y Y '*'
-                    chroot_umount
-            end
+            logger 1 "Exited without umount"
         case 1 '*'
             chroot_umount
     end
@@ -632,7 +625,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-07-01_05:40:10
+echo Build_Time_UTC=2022-07-01_05:44:54
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
