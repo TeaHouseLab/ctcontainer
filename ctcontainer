@@ -77,7 +77,7 @@ function help_echo
         -k/--remove: Detect and remove a systemd service for specific container
 
 Argvs
-(./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level=, -u/--ctauto_umount=, -p/--ctsafety_level=, -b/--ctbackend=] commands
+(./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level=, -u/--ctauto_umount=, -p/--ctsafety_level=, -b/--ctbackend=, -x/--x11=] commands
 
     -r/--ctroot=: Force set a ctcontainer root directory
 
@@ -90,6 +90,8 @@ Argvs
     -p/--ctsafety_level=: Force set a safety level, available{-1, 0, 1, 2}
 
     -b/--ctbackend=: Force set a ctcontainer backend, available{chroot, nspawn}
+
+    -x/--x11: Force set a x11 backend for ctcontainer, available{xhost, xephyr}, other option will make ctcontainer to skip setup x11 backend
 
     Note: These arg must be put before any commands
 '
@@ -449,6 +451,9 @@ function nspawn_run
             logger 5 "can't understand what is $ctcontainer_safety_level,abort"
             exit
     end
+    if test $ctcontainer_x11 = "xephyr"
+        killall Xephyr &>/dev/null
+    end
 end
 
 function chroot_run
@@ -630,7 +635,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-07-01_05:08:26
+echo Build_Time_UTC=2022-07-01_05:34:33
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
