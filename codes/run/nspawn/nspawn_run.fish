@@ -33,7 +33,4 @@ function nspawn_run
             logger 5 "can't understand what is $ctcontainer_safety_level,abort"
             exit
     end
-    if test $ctcontainer_x11 = "xephyr"
-        killall Xephyr &>/dev/null
-    end
 end

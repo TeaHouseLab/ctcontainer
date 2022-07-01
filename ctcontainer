@@ -451,9 +451,6 @@ function nspawn_run
             logger 5 "can't understand what is $ctcontainer_safety_level,abort"
             exit
     end
-    if test $ctcontainer_x11 = "xephyr"
-        killall Xephyr &>/dev/null
-    end
 end
 
 function chroot_run
@@ -635,7 +632,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-07-01_05:34:33
+echo Build_Time_UTC=2022-07-01_05:40:10
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
