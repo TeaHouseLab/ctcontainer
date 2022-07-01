@@ -5,17 +5,19 @@ set -lx ctcontainer_log_level info
 set -lx ctcontainer_backend chroot
 set -lx ctcontainer_safety_level 1
 set -lx ctcontainer_auto_umount 1
+set -lx ctcontainer_x11 xhost
 if test -d /etc/centerlinux/conf.d/
 else
     sudo mkdir -p /etc/centerlinux/conf.d/
 end
 if test -e /etc/centerlinux/conf.d/ctcontainer.conf
-    set ctcontainer_root (sed -n '/ctcontainer_root=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/ctcontainer_root=//g')
-    set ctcontainer_share (sed -n '/ctcontainer_share=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/ctcontainer_share=//g')
-    set ctcontainer_log_level (sed -n '/log_level=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/log_level=//g')
-    set ctcontainer_backend (sed -n '/backend=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/backend=//g')
-    set ctcontainer_safety_level (sed -n '/safety_level=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/safety_level=//g')
-    set ctcontainer_auto_umount (sed -n '/auto_umount=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/auto_umount=//g')
+    set ctcontainer_root (configure ctcontainer_root /etc/centerlinux/conf.d/ctcontainer.conf)
+    set ctcontainer_share (configure ctcontainer_share /etc/centerlinux/conf.d/ctcontainer.conf)
+    set ctcontainer_log_level (configure log_level /etc/centerlinux/conf.d/ctcontainer.conf)
+    set ctcontainer_backend (configure backend /etc/centerlinux/conf.d/ctcontainer.conf)
+    set ctcontainer_safety_level (configure safety_level /etc/centerlinux/conf.d/ctcontainer.conf)
+    set ctcontainer_auto_umount (configure auto_umount /etc/centerlinux/conf.d/ctcontainer.conf)
+    set ctcontainer_x11 (configure x11 /etc/centerlinux/conf.d/ctcontainer.conf)
 else
     ctconfig_init
 end
@@ -24,7 +26,7 @@ else
     logger 4 "root.ctcontainer not found,try to create it under root"
     sudo mkdir -p $ctcontainer_root
 end
-argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' -- $argv
+argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' 'x/x11=' -- $argv
 if set -q _flag_ctroot
     set ctcontainer_root $_flag_ctroot
 end
@@ -43,6 +45,9 @@ end
 if set -q _flag_ctbackend
     set ctcontainer_backend $_flag_ctbackend
 end
+if set -q _flag_x11
+    set ctcontainer_x11 $_flag_x11
+end
 if [ "$ctcontainer_log_level" = debug ]
     logger 3 "set root.ctcontainer -> $ctcontainer_root"
     logger 3 "set share.ctcontainer -> $ctcontainer_share"
@@ -50,8 +55,11 @@ if [ "$ctcontainer_log_level" = debug ]
     logger 3 "set backend.ctcontainer -> $ctcontainer_backend"
     logger 3 "set safety_level.ctcontainer -> $ctcontainer_safety_level"
     logger 3 "set auto_umount.ctcontainer -> $ctcontainer_auto_umount"
+    logger 3 "set x11.ctcontainer -> $ctcontainer_x11"
 end
 switch $argv[1]
+    case service
+        service $argv[2..-1]
     case purge
         purge $argv[2..-1]
     case init
@@ -76,7 +84,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 1 "Hairpin@build1"
+        logger 1 "Hairpin@build2"
     case install
         install ctcontainer
     case uninstall

@@ -59,7 +59,10 @@ function help_echo
 
     import: Import a container into ctcontainer root
         Example: ctcontainer import /home/thl/tmp/fedora35 (-f)
-        Note: [1]Add a -f after the name of your container will create it without prefix; [2]import source must be a specific path, you can`t use ./xxx.
+        Argvs [-f/--forcename, -n/--name=]
+        -f/--forcename: Create your container without prefix
+        -n/--name=: Create your container with a custom name
+        (Note: If a container already exist, it will directly overwrite it if you specific a name or create it without prefix)
 
     purge: Purge a container from ctcontainer root
 
@@ -67,9 +70,14 @@ function help_echo
         Example1: ctcontainer list installed (list installed container)
         Example2: ctcontainer list installed size (list installed container, with their size sumup)
         Example3: ctcontainer list available (list available rootfs on cloud repo)
+    
+    service: Create a systemd service for nspawn container
+        Example: ctcontainer service (-k) alpinelinux
+        Argvs [-k/--remove]
+        -k/--remove: Detect and remove a systemd service for specific container
 
 Argvs
-(./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level, -u/--ctauto_umount, -p/--ctsafety_level=, -b/--ctbackend=] commands
+(./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level=, -u/--ctauto_umount=, -p/--ctsafety_level=, -b/--ctbackend=] commands
 
     -r/--ctroot=: Force set a ctcontainer root directory
 
@@ -152,6 +160,9 @@ case 5
 end
 end
 
+function configure
+    sed -n "/$argv[1]=/"p "$argv[2]" | sed "s/$argv[1]=//g"
+end
 function purge
     for container in $argv[1..-1]
         cd $ctcontainer_root
@@ -159,10 +170,11 @@ function purge
             if sudo rm -rf $container
                 logger 2 "$container has been purged"
             else
-                logger 5 "Ouch!Something went wrong at purge.ctcontainer"
+                logger 5 "Something went wrong while purging $container"
             end
         else
-            logger 5 "No such container in root.ctcontainer"
+            logger 5 "Container $container does not exist,abort,check your containerlist,or probably there's a incorrect option is provided"
+            exit
         end
     end
 end
@@ -229,13 +241,65 @@ function ctconfig_init
     set_color red
     echo "$prefix Detected First Launching,We need your password to create the config file"
     set_color normal
-    sudo sh -c "echo "ctcontainer_root=/opt/ctcontainer" > /etc/centerlinux/conf.d/ctcontainer.conf"
-    sudo sh -c "echo "ctcontainer_share=$HOME/ctcontainer_share" >> /etc/centerlinux/conf.d/ctcontainer.conf"
-    sudo sh -c "echo "log_level=info" >> /etc/centerlinux/conf.d/ctcontainer.conf"
-    sudo sh -c "echo "backend=chroot" >> /etc/centerlinux/conf.d/ctcontainer.conf"
-    sudo sh -c "echo "safety_level=-1" >> /etc/centerlinux/conf.d/ctcontainer.conf"
-    sudo sh -c "echo "auto_umount=1" >> /etc/centerlinux/conf.d/ctcontainer.conf"
+    echo "ctcontainer_root=/opt/ctcontainer 
+ctcontainer_share=$HOME/ctcontainer_share 
+log_level=info 
+backend=chroot 
+safety_level=-1 
+auto_umount=1
+x11=xhost" >/etc/centerlinux/conf.d/ctcontainer.conf
 end
+
+function service
+    argparse -i -n $prefix k/remove -- $argv
+    set containers $argv[1]
+    if set -q _flag_remove
+        for container in $containers
+            if [ "$container" = "" ]
+                logger 5 "Nothing selected , abort"
+                exit 1
+            else
+                if test -d $ctcontainer_root/$container; and test -r $ctcontainer_root/$container
+                else
+                    logger 5 "Container $container does not exist,abort,check your containerlist,or probably there's a incorrect option is provided"
+                    exit 1
+                end
+            end
+            if sudo rm /etc/systemd/system/ctcontainer-$container.service
+                logger 2 "Systemd service for $container has been removed"
+            else
+                logger 5 "Something went wrong while removing systemd service for $container"
+            end
+        end
+    else
+        for container in $containers
+            if [ "$container" = "" ]
+                logger 5 "Nothing selected , abort"
+                exit 1
+            else
+                if test -d $ctcontainer_root/$container; and test -r $ctcontainer_root/$container
+                else
+                    logger 5 "Container $container does not exist,abort,check your containerlist,or probably there's a incorrect option is provided"
+                    exit 1
+                end
+            end
+            echo "[Unit]
+Description=ctcontainer-nspawn-$container
+After=network.target
+StartLimitIntervalSec=15
+[Service]
+User=root
+ExecStart=ctcontainer -b nspawn -p 0 run $container whatever
+SyslogIdentifier=ctcontainer-nspawn-$container
+Restart=on-failure
+RestartSec=5
+[Install]
+WantedBy=multi-user.target" | sudo tee /etc/systemd/system/ctcontainer-$container.service &>/dev/null
+            logger 2 "Systemd service for $container has been created at /etc/systemd/system/ctcontainer-$container.service"
+        end
+    end
+end
+
 function list
     switch $argv[1]
         case installed
@@ -491,17 +555,30 @@ function essential_mount
 end
 
 function setup_user_xorg
-    if command -q -v xhost
-        if xhost +local: &>/dev/null
-        else
-            if [ "$ctcontainer_log_level" = debug ]
-                logger 3 "Xhost cannot be launched,skip"
+    switch $ctcontainer_x11
+        case xhost
+            if command -q -v xhost
+                if xhost +local: &>/dev/null
+                else
+                    if [ "$ctcontainer_log_level" = debug ]
+                        logger 3 "Xhost cannot be setup,skip"
+                    end
+                end
+            else
+                if [ "$ctcontainer_log_level" = debug ]
+                    logger 3 "Xhost was not found,xorg in container couldn't be set up"
+                end
             end
-        end
-    else
-        if [ "$ctcontainer_log_level" = debug ]
-            logger 3 "Xhost was not found,xorg in container couldn't be set up"
-        end
+        case xephyr
+            if command -q -v Xephyr
+                Xephyr -br -ac -noreset -title "ctcontainer@$container" :1 &>/dev/null &
+            else
+                if [ "$ctcontainer_log_level" = debug ]
+                    logger 3 "Xephyr was not found,xorg in container couldn't be set up"
+                end
+            end
+        case '*'
+            logger 4 "Skip setup for x11"
     end
 end
 
@@ -553,7 +630,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-06-30_00:38:37
+echo Build_Time_UTC=2022-07-01_05:08:26
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -561,17 +638,19 @@ set -lx ctcontainer_log_level info
 set -lx ctcontainer_backend chroot
 set -lx ctcontainer_safety_level 1
 set -lx ctcontainer_auto_umount 1
+set -lx ctcontainer_x11 xhost
 if test -d /etc/centerlinux/conf.d/
 else
     sudo mkdir -p /etc/centerlinux/conf.d/
 end
 if test -e /etc/centerlinux/conf.d/ctcontainer.conf
-    set ctcontainer_root (sed -n '/ctcontainer_root=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/ctcontainer_root=//g')
-    set ctcontainer_share (sed -n '/ctcontainer_share=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/ctcontainer_share=//g')
-    set ctcontainer_log_level (sed -n '/log_level=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/log_level=//g')
-    set ctcontainer_backend (sed -n '/backend=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/backend=//g')
-    set ctcontainer_safety_level (sed -n '/safety_level=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/safety_level=//g')
-    set ctcontainer_auto_umount (sed -n '/auto_umount=/'p /etc/centerlinux/conf.d/ctcontainer.conf | sed 's/auto_umount=//g')
+    set ctcontainer_root (configure ctcontainer_root /etc/centerlinux/conf.d/ctcontainer.conf)
+    set ctcontainer_share (configure ctcontainer_share /etc/centerlinux/conf.d/ctcontainer.conf)
+    set ctcontainer_log_level (configure log_level /etc/centerlinux/conf.d/ctcontainer.conf)
+    set ctcontainer_backend (configure backend /etc/centerlinux/conf.d/ctcontainer.conf)
+    set ctcontainer_safety_level (configure safety_level /etc/centerlinux/conf.d/ctcontainer.conf)
+    set ctcontainer_auto_umount (configure auto_umount /etc/centerlinux/conf.d/ctcontainer.conf)
+    set ctcontainer_x11 (configure x11 /etc/centerlinux/conf.d/ctcontainer.conf)
 else
     ctconfig_init
 end
@@ -580,7 +659,7 @@ else
     logger 4 "root.ctcontainer not found,try to create it under root"
     sudo mkdir -p $ctcontainer_root
 end
-argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' -- $argv
+argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' 'x/x11=' -- $argv
 if set -q _flag_ctroot
     set ctcontainer_root $_flag_ctroot
 end
@@ -599,6 +678,9 @@ end
 if set -q _flag_ctbackend
     set ctcontainer_backend $_flag_ctbackend
 end
+if set -q _flag_x11
+    set ctcontainer_x11 $_flag_x11
+end
 if [ "$ctcontainer_log_level" = debug ]
     logger 3 "set root.ctcontainer -> $ctcontainer_root"
     logger 3 "set share.ctcontainer -> $ctcontainer_share"
@@ -606,8 +688,11 @@ if [ "$ctcontainer_log_level" = debug ]
     logger 3 "set backend.ctcontainer -> $ctcontainer_backend"
     logger 3 "set safety_level.ctcontainer -> $ctcontainer_safety_level"
     logger 3 "set auto_umount.ctcontainer -> $ctcontainer_auto_umount"
+    logger 3 "set x11.ctcontainer -> $ctcontainer_x11"
 end
 switch $argv[1]
+    case service
+        service $argv[2..-1]
     case purge
         purge $argv[2..-1]
     case init
@@ -632,7 +717,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 1 "Hairpin@build1"
+        logger 1 "Hairpin@build2"
     case install
         install ctcontainer
     case uninstall

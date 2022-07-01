@@ -5,10 +5,11 @@ function purge
             if sudo rm -rf $container
                 logger 2 "$container has been purged"
             else
-                logger 5 "Ouch!Something went wrong at purge.ctcontainer"
+                logger 5 "Something went wrong while purging $container"
             end
         else
-            logger 5 "No such container in root.ctcontainer"
+            logger 5 "Container $container does not exist,abort,check your containerlist,or probably there's a incorrect option is provided"
+            exit
         end
     end
 end

@@ -16,7 +16,10 @@ function help_echo
 
     import: Import a container into ctcontainer root
         Example: ctcontainer import /home/thl/tmp/fedora35 (-f)
-        Note: [1]Add a -f after the name of your container will create it without prefix; [2]import source must be a specific path, you can`t use ./xxx.
+        Argvs [-f/--forcename, -n/--name=]
+        -f/--forcename: Create your container without prefix
+        -n/--name=: Create your container with a custom name
+        (Note: If a container already exist, it will directly overwrite it if you specific a name or create it without prefix)
 
     purge: Purge a container from ctcontainer root
 
@@ -24,9 +27,14 @@ function help_echo
         Example1: ctcontainer list installed (list installed container)
         Example2: ctcontainer list installed size (list installed container, with their size sumup)
         Example3: ctcontainer list available (list available rootfs on cloud repo)
+    
+    service: Create a systemd service for nspawn container
+        Example: ctcontainer service (-k) alpinelinux
+        Argvs [-k/--remove]
+        -k/--remove: Detect and remove a systemd service for specific container
 
 Argvs
-(./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level, -u/--ctauto_umount, -p/--ctsafety_level=, -b/--ctbackend=] commands
+(./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level=, -u/--ctauto_umount=, -p/--ctsafety_level=, -b/--ctbackend=, -x/--x11=] commands
 
     -r/--ctroot=: Force set a ctcontainer root directory
 
@@ -39,6 +47,8 @@ Argvs
     -p/--ctsafety_level=: Force set a safety level, available{-1, 0, 1, 2}
 
     -b/--ctbackend=: Force set a ctcontainer backend, available{chroot, nspawn}
+
+    -x/--x11: Force set a x11 backend for ctcontainer, available{xhost, xephyr}, other option will make ctcontainer to skip setup x11 backend
 
     Note: These arg must be put before any commands
 '
