@@ -22,7 +22,7 @@ function nspawn_run
     cd $ctcontainer_root
     switch $ctcontainer_safety_level
         case -1
-            sudo systemd-nspawn --resolv-conf=off -q -u safety -D $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR DISPLAY=:0 HOME=/home/safety USER=safety $argv[2..-1]
+            sudo systemd-nspawn --resolv-conf=off --bind=$ctcontainer_share:/ctcontainer_share -q -u safety -D $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR DISPLAY=:0 HOME=/home/safety USER=safety $argv[2..-1]
         case 0
             sudo systemd-nspawn --resolv-conf=off -b -q -D $container
         case 1

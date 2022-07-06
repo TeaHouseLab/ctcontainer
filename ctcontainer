@@ -440,7 +440,7 @@ function nspawn_run
     cd $ctcontainer_root
     switch $ctcontainer_safety_level
         case -1
-            sudo systemd-nspawn --resolv-conf=off -q -u safety -D $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR DISPLAY=:0 HOME=/home/safety USER=safety $argv[2..-1]
+            sudo systemd-nspawn --resolv-conf=off --bind=$ctcontainer_share:/ctcontainer_share -q -u safety -D $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR DISPLAY=:0 HOME=/home/safety USER=safety $argv[2..-1]
         case 0
             sudo systemd-nspawn --resolv-conf=off -b -q -D $container
         case 1
@@ -625,7 +625,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-07-03_01:43:19
+echo Build_Time_UTC=2022-07-06_09:11:44
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
