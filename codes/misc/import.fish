@@ -34,7 +34,7 @@ function import
         logger 3 "set containername.import.ctcontainer -> $containername"
     end
     if test -d $containername
-        logger 3 "Found a folder which has the same name of container to import,purge it?[y/n]"
+        logger 3 "A container has already exist with this name, purge and overwrite it?[y/n]"
         read -n1 -P "$prefix >>> " _purge_
         switch $_purge_
             case n N

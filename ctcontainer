@@ -71,10 +71,10 @@ function help_echo
         Example2: ctcontainer list installed size (list installed container, with their size sumup)
         Example3: ctcontainer list available (list available rootfs on cloud repo)
     
-    service: Create a systemd service for nspawn container
-        Example: ctcontainer service (-k) alpinelinux
-        Argvs [-k/--remove]
-        -k/--remove: Detect and remove a systemd service for specific container
+    service: Manage a systemd service for nspawn container
+        Argvs: [create, remove, enable, disable] argvs
+        Example1: ctcontainer create/remove alpinelinux centos9 (create/remove service for alpinelinux and centos9)
+        Example2: ctcontainer enable/disable alpinelinux centos9 (start/stop and enable/disable service for alpinelinux and centos9)
 
 Argvs
 (./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level=, -u/--ctauto_umount=, -p/--ctsafety_level=, -b/--ctbackend=, -x/--x11=] commands
@@ -167,16 +167,12 @@ function configure
 end
 function purge
     for container in $argv[1..-1]
+        container_tester $container
         cd $ctcontainer_root
-        if test -d $container
-            if sudo rm -rf $container
-                logger 2 "$container has been purged"
-            else
-                logger 5 "Something went wrong while purging $container"
-            end
+        if sudo rm -rf -- $container
+            logger 2 "$container has been purged"
         else
-            logger 5 "Container $container does not exist,abort,check your containerlist,or probably there's a incorrect option is provided"
-            exit
+            logger 5 "Something went wrong while purging $container"
         end
     end
 end
@@ -217,7 +213,7 @@ function import
         logger 3 "set containername.import.ctcontainer -> $containername"
     end
     if test -d $containername
-        logger 3 "Found a folder which has the same name of container to import,purge it?[y/n]"
+        logger 3 "A container has already exist with this name, purge and overwrite it?[y/n]"
         read -n1 -P "$prefix >>> " _purge_
         switch $_purge_
             case n N
@@ -253,39 +249,32 @@ x11=xhost" >/etc/centerlinux/conf.d/ctcontainer.conf
 end
 
 function service
-    argparse -i -n $prefix k/remove -- $argv
-    set containers $argv[1]
-    if set -q _flag_remove
-        for container in $containers
-            if [ "$container" = "" ]
-                logger 5 "Nothing selected , abort"
-                exit 1
-            else
-                if test -d $ctcontainer_root/$container; and test -r $ctcontainer_root/$container
+    set containers $argv[2..-1]
+    switch $argv[1]
+        case remove
+            for container in $containers
+                container_tester $container
+                if sudo rm /etc/systemd/system/ctcontainer-$container.service
+                    logger 2 "Systemd service for $container has been removed"
                 else
-                    logger 5 "Container $container does not exist,abort,check your containerlist,or probably there's a incorrect option is provided"
-                    exit 1
+                    logger 5 "Something went wrong while removing systemd service for $container"
                 end
             end
-            if sudo rm /etc/systemd/system/ctcontainer-$container.service
-                logger 2 "Systemd service for $container has been removed"
-            else
-                logger 5 "Something went wrong while removing systemd service for $container"
-            end
-        end
-    else
-        for container in $containers
-            if [ "$container" = "" ]
-                logger 5 "Nothing selected , abort"
-                exit 1
-            else
-                if test -d $ctcontainer_root/$container; and test -r $ctcontainer_root/$container
-                else
-                    logger 5 "Container $container does not exist,abort,check your containerlist,or probably there's a incorrect option is provided"
-                    exit 1
+        case create
+            for container in $containers
+                container_tester $container
+                if test -e /etc/systemd/system/ctcontainer-$container.service
+                    logger 3 "A service file had already been created for this container,remove it?[y/n]"
+                    read -n1 -P "$prefix >>> " _remove_
+                    switch $_remove_
+                        case n N
+                            logger 1 Abort
+                            exit
+                        case y Y '*'
+                            sudo rm /etc/systemd/system/ctcontainer-$container.service
+                    end
                 end
-            end
-            echo "[Unit]
+                echo "[Unit]
 Description=ctcontainer-nspawn-$container
 After=network.target
 StartLimitIntervalSec=15
@@ -297,7 +286,42 @@ Restart=on-failure
 RestartSec=5
 [Install]
 WantedBy=multi-user.target" | sudo tee /etc/systemd/system/ctcontainer-$container.service &>/dev/null
-            logger 2 "Systemd service for $container has been created at /etc/systemd/system/ctcontainer-$container.service"
+                logger 2 "Systemd service for $container has been created at /etc/systemd/system/ctcontainer-$container.service"
+            end
+        case enable
+            for container in $containers
+                container_tester $container
+                if sudo systemctl enable ctcontainer-$container; and sudo systemctl start ctcontainer-$container
+                    logger 2 "Container $container is active and enabled on system startup"
+                else
+                    logger 5 "Something went wrong while enabling container $container"
+                end
+            end
+        case disable
+            for container in $containers
+                container_tester $container
+                if sudo systemctl disable ctcontainer-$container; and sudo systemctl stop ctcontainer-$container
+                    logger 2 "Container $container stopped and disabled on system startup"
+                else
+                    logger 5 "Something went wrong while disabling container $container"
+                end
+            end
+        case '*'
+            logger 5 "No option is provided, abort"
+            exit 1
+    end
+end
+
+function container_tester
+    set container $argv[1]
+    if [ "$container" = "" ]
+        logger 5 "Nothing selected , abort"
+        exit 1
+    else
+        if test -d $ctcontainer_root/$container; and test -r $ctcontainer_root/$container
+        else
+            logger 5 "Container $container does not exist,abort,check your container list,or probably there's a incorrect option is provided"
+            exit 1
         end
     end
 end
@@ -363,6 +387,17 @@ function init
     if [ "$ctcontainer_log_level" = debug ]
         logger 3 "set containername.import.ctcontainer -> $ctcontainername"
         logger 3 "curl.init.ctcontainer ==> Grabbing https://cdngit.ruzhtw.top/ctcontainer/$container"
+    end
+    if test -d $containername
+        logger 3 "A container has already exist with this name, purge and overwrite it?[y/n]"
+        read -n1 -P "$prefix >>> " _purge_
+        switch $_purge_
+            case n N
+                logger 1 Abort
+                exit
+            case y Y '*'
+                sudo rm -rf $ctcontainer_root/$containername
+        end
     end
     if sudo -E curl --progress-bar -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer/$container
         if file $container.tar.gz | grep -q compressed
@@ -625,7 +660,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-07-06_09:11:44
+echo Build_Time_UTC=2022-07-12_08:33:15
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -712,7 +747,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 1 "Hairpin@build2"
+        logger 1 "Hairpin@build3"
     case install
         install ctcontainer
     case uninstall

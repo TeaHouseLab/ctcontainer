@@ -28,10 +28,10 @@ function help_echo
         Example2: ctcontainer list installed size (list installed container, with their size sumup)
         Example3: ctcontainer list available (list available rootfs on cloud repo)
     
-    service: Create a systemd service for nspawn container
-        Example: ctcontainer service (-k) alpinelinux
-        Argvs [-k/--remove]
-        -k/--remove: Detect and remove a systemd service for specific container
+    service: Manage a systemd service for nspawn container
+        Argvs: [create, remove, enable, disable] argvs
+        Example1: ctcontainer create/remove alpinelinux centos9 (create/remove service for alpinelinux and centos9)
+        Example2: ctcontainer enable/disable alpinelinux centos9 (start/stop and enable/disable service for alpinelinux and centos9)
 
 Argvs
 (./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level=, -u/--ctauto_umount=, -p/--ctsafety_level=, -b/--ctbackend=, -x/--x11=] commands

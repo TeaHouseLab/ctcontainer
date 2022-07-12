@@ -34,6 +34,17 @@ function init
         logger 3 "set containername.import.ctcontainer -> $ctcontainername"
         logger 3 "curl.init.ctcontainer ==> Grabbing https://cdngit.ruzhtw.top/ctcontainer/$container"
     end
+    if test -d $containername
+        logger 3 "A container has already exist with this name, purge and overwrite it?[y/n]"
+        read -n1 -P "$prefix >>> " _purge_
+        switch $_purge_
+            case n N
+                logger 1 Abort
+                exit
+            case y Y '*'
+                sudo rm -rf $ctcontainer_root/$containername
+        end
+    end
     if sudo -E curl --progress-bar -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer/$container
         if file $container.tar.gz | grep -q compressed
             logger 2 "$container Package downloaded"
