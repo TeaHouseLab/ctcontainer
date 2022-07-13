@@ -330,9 +330,9 @@ function container_tester
 end
 
 function read_lxc
-    if test $ctcontainer_source = ""
+    if test -z "$ctcontainer_source"
         logger 5 "No remote repo is configured, abort"
-        logger 5 "Please configure it in /etc/centerlinux/conf.d/ctcontainer.conf"
+        logger 5 "Please configure source= in /etc/centerlinux/conf.d/ctcontainer.conf"
         exit
     end
     set image (curl -sL $ctcontainer_source/streams/v1/images.json | jq -r '.products')
@@ -432,7 +432,7 @@ function init
         sudo mv $container.tar.gz $containername
         cd $containername
         if sudo tar xf $container.tar.gz
-            sudo sh -c "echo 'safety:x:1000:1000:safety,,,:/home/safety:/bin/sh' >> $ctcontainer_root/$containername/etc/passwd & echo 'safety:x:1000:' >> $ctcontainer_root/$containername/etc/group & echo 'safety:!:18986:0:99999:7:::' >> $ctcontainer_root/$containername/etc/shadow & mkdir $ctcontainer_root/$containername/home/safety & rm $ctcontainer_root/$containername/etc/hostname & echo $containername > $ctcontainer_root/$containername/etc/hostname & echo 127.0.0.1  $containername >> $ctcontainer_root/$containername/etc/hosts"
+            sudo sh -c "echo 'safety:x:1000:1000:safety,,,:/home/safety:/bin/sh' >> $ctcontainer_root/$containername/etc/passwd & echo 'safety:x:1000:' >> $ctcontainer_root/$containername/etc/group & echo 'safety:!:18986:0:99999:7:::' >> $ctcontainer_root/$containername/etc/shadow & mkdir -p $ctcontainer_root/$containername/home/safety & rm $ctcontainer_root/$containername/etc/hostname & echo $containername > $ctcontainer_root/$containername/etc/hostname & echo 127.0.0.1  $containername >> $ctcontainer_root/$containername/etc/hosts"
             sudo cp -f --remove-destination /etc/resolv.conf "$ctcontainer_root/$containername/etc/resolv.conf"
             set ctcontainer_safety_level 1
             set ctcontainer_auto_umount 1
@@ -642,7 +642,7 @@ end
 
 function essential_umount
     function chroot_umount
-        set chroot_mount_point /dev/pts /dev /proc /sys /var/run/dbus /run/dbus "$XDG_RUNTIME_DIR" /ctcontainer_share
+        set chroot_mount_point /dev/pts /dev /proc /sys /var/run/dbus /tmp/run/dbus /run/dbus "$XDG_RUNTIME_DIR" /ctcontainer_share
         for chroot_umount_target in $chroot_mount_point
             if grep -qs "$ctcontainer_root/$container$chroot_umount_target" /proc/mounts
                 sudo umount -l $ctcontainer_root/$container$chroot_umount_target
@@ -681,7 +681,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-07-13_04:42:01
+echo Build_Time_UTC=2022-07-13_07:41:34
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share

@@ -1,7 +1,7 @@
 function read_lxc
-    if test $ctcontainer_source = ""
+    if test -z "$ctcontainer_source"
         logger 5 "No remote repo is configured, abort"
-        logger 5 "Please configure it in /etc/centerlinux/conf.d/ctcontainer.conf"
+        logger 5 "Please configure source= in /etc/centerlinux/conf.d/ctcontainer.conf"
         exit
     end
     set image (curl -sL $ctcontainer_source/streams/v1/images.json | jq -r '.products')
