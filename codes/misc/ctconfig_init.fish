@@ -8,5 +8,6 @@ log_level=info
 backend=chroot 
 safety_level=-1 
 auto_umount=1
-x11=xhost" >/etc/centerlinux/conf.d/ctcontainer.conf
+x11=xhost
+source=https://us.lxd.images.canonical.com" >/etc/centerlinux/conf.d/ctcontainer.conf
 end

@@ -34,7 +34,7 @@ function help_echo
         Example2: ctcontainer enable/disable alpinelinux centos9 (start/stop and enable/disable service for alpinelinux and centos9)
 
 Argvs
-(./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level=, -u/--ctauto_umount=, -p/--ctsafety_level=, -b/--ctbackend=, -x/--x11=] commands
+(./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level=, -u/--ctauto_umount=, -p/--ctsafety_level=, -b/--ctbackend=, -x/--x11=, -e/--source] commands
 
     -r/--ctroot=: Force set a ctcontainer root directory
 
@@ -49,6 +49,8 @@ Argvs
     -b/--ctbackend=: Force set a ctcontainer backend, available{chroot, nspawn}
 
     -x/--x11: Force set a x11 backend for ctcontainer, available{xhost, xephyr}, other option will make ctcontainer to skip setup x11 backend
+
+    -e/--source: Force set a remote lxc images repo
 
     Note: These arg must be put before any commands
 '

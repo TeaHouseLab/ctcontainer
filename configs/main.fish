@@ -6,6 +6,7 @@ set -lx ctcontainer_backend chroot
 set -lx ctcontainer_safety_level 1
 set -lx ctcontainer_auto_umount 1
 set -lx ctcontainer_x11 xhost
+set -lx ctcontainer_source "https://us.lxd.images.canonical.com"
 if test -d /etc/centerlinux/conf.d/
 else
     sudo mkdir -p /etc/centerlinux/conf.d/
@@ -18,6 +19,7 @@ if test -e /etc/centerlinux/conf.d/ctcontainer.conf
     set ctcontainer_safety_level (configure safety_level /etc/centerlinux/conf.d/ctcontainer.conf)
     set ctcontainer_auto_umount (configure auto_umount /etc/centerlinux/conf.d/ctcontainer.conf)
     set ctcontainer_x11 (configure x11 /etc/centerlinux/conf.d/ctcontainer.conf)
+    set ctcontainer_source (configure source /etc/centerlinux/conf.d/ctcontainer.conf)
 else
     ctconfig_init
 end
@@ -26,7 +28,7 @@ else
     logger 4 "root.ctcontainer not found,try to create it under root"
     sudo mkdir -p $ctcontainer_root
 end
-argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' 'x/x11=' -- $argv
+argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' 'x/x11=' 'e/source=' -- $argv
 if set -q _flag_ctroot
     set ctcontainer_root $_flag_ctroot
 end
@@ -48,6 +50,9 @@ end
 if set -q _flag_x11
     set ctcontainer_x11 $_flag_x11
 end
+if set -q _flag_source
+    set ctcontainer_source $_flag_source
+end
 if [ "$ctcontainer_log_level" = debug ]
     logger 3 "set root.ctcontainer -> $ctcontainer_root"
     logger 3 "set share.ctcontainer -> $ctcontainer_share"
@@ -56,6 +61,7 @@ if [ "$ctcontainer_log_level" = debug ]
     logger 3 "set safety_level.ctcontainer -> $ctcontainer_safety_level"
     logger 3 "set auto_umount.ctcontainer -> $ctcontainer_auto_umount"
     logger 3 "set x11.ctcontainer -> $ctcontainer_x11"
+    logger 3 "set source.ctcontainer -> $ctcontainer_source"
 end
 switch $argv[1]
     case service
@@ -84,7 +90,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 1 "Hairpin@build3"
+        logger 1 "Hairpin@build4"
     case install
         install ctcontainer
     case uninstall

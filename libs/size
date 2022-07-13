@@ -1,0 +1,32 @@
+function size
+    set size1239_calcamount $argv[1]
+    if [ "$size1239_calcamount" -ge 0 ]
+        set size1239_printamount (math -s2 $size1239_calcamount/1)
+        set size1239_scale b
+    end
+    if [ "$size1239_calcamount" -ge 8 ]
+        set size1239_printamount (math -s2 $size1239_calcamount/8)
+        set size1239_scale B
+    end
+    if [ "$size1239_calcamount" -ge 8192 ]
+        set size1239_printamount (math -s2 $size1239_calcamount/8192)
+        set size1239_scale KB
+    end
+    if [ "$size1239_calcamount" -ge 8388608 ]
+        set size1239_printamount (math -s2 $size1239_calcamount/8388608)
+        set size1239_scale MB
+    end
+    if [ "$size1239_calcamount" -ge 8589934592 ]
+        set size1239_printamount (math -s2 $size1239_calcamount/8589934592)
+        set size1239_scale GB
+    end
+    if [ "$size1239_calcamount" -ge 8796093022208 ]
+        set size1239_printamount (math -s2 $size1239_calcamount/8796093022208)
+        set size1239_scale TB
+    end
+    if [ "$size1239_calcamount" -ge 9007199254741000 ]
+        set size1239_printamount (math -s2 $size1239_calcamount/9007199254741000)
+        set size1239_scale PB
+    end
+    echo $size1239_printamount $size1239_scale
+end

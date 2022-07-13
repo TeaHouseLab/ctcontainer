@@ -1,6 +1,7 @@
 function init
     set container $argv[1]
     set containername $container
+    set images (curl -sL $ctcontainer_source/streams/v1/images.json | jq -r '.products')
     if [ "$ctcontainer_log_level" = debug ]
         logger 3 "set container.init.ctcontainer -> $container"
         logger 3 "set containername.init.ctcontainer -> $ctcontainername"
@@ -30,9 +31,10 @@ function init
             set containername $_flag_name
         end
     end
+    set remote_path (read_lxc get_path $container)
     if [ "$ctcontainer_log_level" = debug ]
         logger 3 "set containername.import.ctcontainer -> $ctcontainername"
-        logger 3 "curl.init.ctcontainer ==> Grabbing https://cdngit.ruzhtw.top/ctcontainer/$container"
+        logger 3 "curl.init.ctcontainer ==> Grabbing $ctcontainer_source/$remote_path"
     end
     if test -d $containername
         logger 3 "A container has already exist with this name, purge and overwrite it?[y/n]"
@@ -45,7 +47,7 @@ function init
                 sudo rm -rf $ctcontainer_root/$containername
         end
     end
-    if sudo -E curl --progress-bar -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer/$container
+    if sudo -E curl --progress-bar -L -o $container.tar.gz $ctcontainer_source/$remote_path
         if file $container.tar.gz | grep -q compressed
             logger 2 "$container Package downloaded"
         else

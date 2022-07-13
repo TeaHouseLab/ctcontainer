@@ -77,7 +77,7 @@ function help_echo
         Example2: ctcontainer enable/disable alpinelinux centos9 (start/stop and enable/disable service for alpinelinux and centos9)
 
 Argvs
-(./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level=, -u/--ctauto_umount=, -p/--ctsafety_level=, -b/--ctbackend=, -x/--x11=] commands
+(./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level=, -u/--ctauto_umount=, -p/--ctsafety_level=, -b/--ctbackend=, -x/--x11=, -e/--source] commands
 
     -r/--ctroot=: Force set a ctcontainer root directory
 
@@ -92,6 +92,8 @@ Argvs
     -b/--ctbackend=: Force set a ctcontainer backend, available{chroot, nspawn}
 
     -x/--x11: Force set a x11 backend for ctcontainer, available{xhost, xephyr}, other option will make ctcontainer to skip setup x11 backend
+
+    -e/--source: Force set a remote lxc images repo
 
     Note: These arg must be put before any commands
 '
@@ -164,6 +166,38 @@ end
 
 function configure
     sed -n "/$argv[1]=/"p "$argv[2]" | sed "s/$argv[1]=//g"
+end
+function size
+    set size1239_calcamount $argv[1]
+    if [ "$size1239_calcamount" -ge 0 ]
+        set size1239_printamount (math -s2 $size1239_calcamount/1)
+        set size1239_scale b
+    end
+    if [ "$size1239_calcamount" -ge 8 ]
+        set size1239_printamount (math -s2 $size1239_calcamount/8)
+        set size1239_scale B
+    end
+    if [ "$size1239_calcamount" -ge 8192 ]
+        set size1239_printamount (math -s2 $size1239_calcamount/8192)
+        set size1239_scale KB
+    end
+    if [ "$size1239_calcamount" -ge 8388608 ]
+        set size1239_printamount (math -s2 $size1239_calcamount/8388608)
+        set size1239_scale MB
+    end
+    if [ "$size1239_calcamount" -ge 8589934592 ]
+        set size1239_printamount (math -s2 $size1239_calcamount/8589934592)
+        set size1239_scale GB
+    end
+    if [ "$size1239_calcamount" -ge 8796093022208 ]
+        set size1239_printamount (math -s2 $size1239_calcamount/8796093022208)
+        set size1239_scale TB
+    end
+    if [ "$size1239_calcamount" -ge 9007199254741000 ]
+        set size1239_printamount (math -s2 $size1239_calcamount/9007199254741000)
+        set size1239_scale PB
+    end
+    echo $size1239_printamount $size1239_scale
 end
 function purge
     for container in $argv[1..-1]
@@ -245,7 +279,8 @@ log_level=info
 backend=chroot 
 safety_level=-1 
 auto_umount=1
-x11=xhost" >/etc/centerlinux/conf.d/ctcontainer.conf
+x11=xhost
+source=https://us.lxd.images.canonical.com" >/etc/centerlinux/conf.d/ctcontainer.conf
 end
 
 function service
@@ -326,28 +361,46 @@ function container_tester
     end
 end
 
+function read_lxc
+    if test $ctcontainer_source = ""
+        logger 5 "No remote repo is configured, abort"
+        logger 5 "Please configure it in /etc/centerlinux/conf.d/ctcontainer.conf"
+        exit
+    end
+    set image (curl -sL $ctcontainer_source/streams/v1/images.json | jq -r '.products')
+    switch $argv[1]
+        case all_images
+            echo $image | jq -r 'keys | .[]' | sed 's/\:/-/g'
+        case get_path
+            set container $argv[2]
+            set container_item (echo $container | sed 's/-/\:/g')
+            set latest (echo $image | jq -r ".[\"$container_item\"].versions|keys|.[]" | tail -n1)
+            echo $image | jq -r ".[\"$container_item\"].versions|.[\"$latest\"].items |.[\"root.tar.xz\"].path"
+    end
+end
+
 function list
+    set images (curl -sL $ctcontainer_source/streams/v1/images.json | jq -r '.products')
     switch $argv[1]
         case installed
             switch $argv[2]
                 case size
-                    logger 1 "Installed"
+                    logger 4 "Installed"
                     for container in (list_menu $ctcontainer_root)
                         printf "$container "
                         sudo du -sh $ctcontainer_root/$container | awk '{ print $1 }'
                     end
                 case '*'
-                    logger 1 "Installed"
+                    logger 4 "Installed"
                     list_menu $ctcontainer_root
             end
         case available
-            logger 1 "Available"
-            curl -s -L https://cdngit.ruzhtw.top/ctcontainer/available
+            logger 4 "Available"
+            read_lxc all_images
         case '*'
-            logger 1 "Available"
-            curl -s -L https://cdngit.ruzhtw.top/ctcontainer/available
-            echo
-            logger 1 "Installed"
+            logger 4 "Available"
+            read_lxc all_images
+            logger 4 "Installed"
             list_menu $ctcontainer_root
     end
 end
@@ -355,6 +408,7 @@ end
 function init
     set container $argv[1]
     set containername $container
+    set images (curl -sL $ctcontainer_source/streams/v1/images.json | jq -r '.products')
     if [ "$ctcontainer_log_level" = debug ]
         logger 3 "set container.init.ctcontainer -> $container"
         logger 3 "set containername.init.ctcontainer -> $ctcontainername"
@@ -384,9 +438,10 @@ function init
             set containername $_flag_name
         end
     end
+    set remote_path (read_lxc get_path $container)
     if [ "$ctcontainer_log_level" = debug ]
         logger 3 "set containername.import.ctcontainer -> $ctcontainername"
-        logger 3 "curl.init.ctcontainer ==> Grabbing https://cdngit.ruzhtw.top/ctcontainer/$container"
+        logger 3 "curl.init.ctcontainer ==> Grabbing $ctcontainer_source/$remote_path"
     end
     if test -d $containername
         logger 3 "A container has already exist with this name, purge and overwrite it?[y/n]"
@@ -399,7 +454,7 @@ function init
                 sudo rm -rf $ctcontainer_root/$containername
         end
     end
-    if sudo -E curl --progress-bar -L -o $container.tar.gz https://cdngit.ruzhtw.top/ctcontainer/$container
+    if sudo -E curl --progress-bar -L -o $container.tar.gz $ctcontainer_source/$remote_path
         if file $container.tar.gz | grep -q compressed
             logger 2 "$container Package downloaded"
         else
@@ -660,7 +715,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-07-12_08:33:15
+echo Build_Time_UTC=2022-07-13_04:36:09
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -669,6 +724,7 @@ set -lx ctcontainer_backend chroot
 set -lx ctcontainer_safety_level 1
 set -lx ctcontainer_auto_umount 1
 set -lx ctcontainer_x11 xhost
+set -lx ctcontainer_source "https://us.lxd.images.canonical.com"
 if test -d /etc/centerlinux/conf.d/
 else
     sudo mkdir -p /etc/centerlinux/conf.d/
@@ -681,6 +737,7 @@ if test -e /etc/centerlinux/conf.d/ctcontainer.conf
     set ctcontainer_safety_level (configure safety_level /etc/centerlinux/conf.d/ctcontainer.conf)
     set ctcontainer_auto_umount (configure auto_umount /etc/centerlinux/conf.d/ctcontainer.conf)
     set ctcontainer_x11 (configure x11 /etc/centerlinux/conf.d/ctcontainer.conf)
+    set ctcontainer_source (configure source /etc/centerlinux/conf.d/ctcontainer.conf)
 else
     ctconfig_init
 end
@@ -689,7 +746,7 @@ else
     logger 4 "root.ctcontainer not found,try to create it under root"
     sudo mkdir -p $ctcontainer_root
 end
-argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' 'x/x11=' -- $argv
+argparse -i -n $prefix 'r/ctroot=' 's/ctshare=' 'l/ctlog_level=' 'u/ctauto_umount=' 'p/ctsafety_level=' 'b/ctbackend=' 'x/x11=' 'e/source=' -- $argv
 if set -q _flag_ctroot
     set ctcontainer_root $_flag_ctroot
 end
@@ -711,6 +768,9 @@ end
 if set -q _flag_x11
     set ctcontainer_x11 $_flag_x11
 end
+if set -q _flag_source
+    set ctcontainer_source $_flag_source
+end
 if [ "$ctcontainer_log_level" = debug ]
     logger 3 "set root.ctcontainer -> $ctcontainer_root"
     logger 3 "set share.ctcontainer -> $ctcontainer_share"
@@ -719,6 +779,7 @@ if [ "$ctcontainer_log_level" = debug ]
     logger 3 "set safety_level.ctcontainer -> $ctcontainer_safety_level"
     logger 3 "set auto_umount.ctcontainer -> $ctcontainer_auto_umount"
     logger 3 "set x11.ctcontainer -> $ctcontainer_x11"
+    logger 3 "set source.ctcontainer -> $ctcontainer_source"
 end
 switch $argv[1]
     case service
@@ -747,7 +808,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 1 "Hairpin@build3"
+        logger 1 "Hairpin@build4"
     case install
         install ctcontainer
     case uninstall
