@@ -1,5 +1,4 @@
 function list
-    set images (curl -sL $ctcontainer_source/streams/v1/images.json | jq -r '.products')
     switch $argv[1]
         case installed
             switch $argv[2]

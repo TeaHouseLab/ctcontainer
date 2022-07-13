@@ -4,4 +4,3 @@ help_echo
 installer
 logger
 configure
-size

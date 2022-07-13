@@ -1,7 +1,6 @@
 function init
     set container $argv[1]
     set containername $container
-    set images (curl -sL $ctcontainer_source/streams/v1/images.json | jq -r '.products')
     if [ "$ctcontainer_log_level" = debug ]
         logger 3 "set container.init.ctcontainer -> $container"
         logger 3 "set containername.init.ctcontainer -> $ctcontainername"
