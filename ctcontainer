@@ -338,12 +338,11 @@ function read_lxc
     set image (curl -sL $ctcontainer_source/streams/v1/images.json | jq -r '.products')
     switch $argv[1]
         case all_images
-            echo $image | jq -r 'keys | .[]' | sed 's/\:/-/g'
+            echo $image | jq -r 'keys | .[]'
         case get_path
             set container $argv[2]
-            set container_item (echo $container | sed 's/-/\:/g')
-            set latest (echo $image | jq -r ".[\"$container_item\"].versions|keys|.[]" | tail -n1)
-            echo $image | jq -r ".[\"$container_item\"].versions|.[\"$latest\"].items |.[\"root.tar.xz\"].path"
+            set latest (echo $image | jq -r ".[\"$container\"].versions|keys|.[]" | tail -n1)
+            echo $image | jq -r ".[\"$container\"].versions|.[\"$latest\"].items |.[\"root.tar.xz\"].path"
     end
 end
 
@@ -431,7 +430,7 @@ function init
         sudo mkdir -p $containername
         sudo mv $container.tar.gz $containername
         cd $containername
-        if sudo tar xf $container.tar.gz
+        if sudo tar --force-local -xf $container.tar.gz
             sudo sh -c "echo 'safety:x:1000:1000:safety,,,:/home/safety:/bin/sh' >> $ctcontainer_root/$containername/etc/passwd & echo 'safety:x:1000:' >> $ctcontainer_root/$containername/etc/group & echo 'safety:!:18986:0:99999:7:::' >> $ctcontainer_root/$containername/etc/shadow & mkdir -p $ctcontainer_root/$containername/home/safety & rm $ctcontainer_root/$containername/etc/hostname & echo $containername > $ctcontainer_root/$containername/etc/hostname & echo 127.0.0.1  $containername >> $ctcontainer_root/$containername/etc/hosts"
             sudo cp -f --remove-destination /etc/resolv.conf "$ctcontainer_root/$containername/etc/resolv.conf"
             set ctcontainer_safety_level 1
@@ -498,8 +497,7 @@ function nspawn_run
         case -1
             sudo systemd-nspawn --resolv-conf=off --bind=$ctcontainer_share:/ctcontainer_share -q -u safety -D $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR DISPLAY=:0 HOME=/home/safety USER=safety $argv[2..-1]
         case 0
-            sudo systemctl start systemd-networkd
-            sudo systemd-nspawn --resolv-conf=off -n -b -q -D $container
+            sudo systemd-nspawn --resolv-conf=off -b -q -D $container
         case 1
             sudo systemd-nspawn --resolv-conf=off -q -D $container env DISPLAY=:0 $argv[2..-1]
         case 2
@@ -682,7 +680,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-07-14_06:10:41
+echo Build_Time_UTC=2022-07-14_07:26:54
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
