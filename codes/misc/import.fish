@@ -45,12 +45,38 @@ function import
         end
     end
     if sudo cp -r $container $containername
-        sudo sh -c "echo 'safety:x:1000:1000:Linux User,,,:/home/safety:/bin/sh' >> $ctcontainer_root/$containername/etc/passwd & echo 'safety:x:1000:' >> $ctcontainer_root/$containername/etc/group & echo 'safety:!:18986:0:99999:7:::' >> $ctcontainer_root/$containername/etc/shadow & mkdir $ctcontainer_root/$containername/home/safety & rm $ctcontainer_root/$containername/etc/hostname & echo $containername > $ctcontainer_root/$containername/etc/hostname & echo 127.0.0.1  $containername >> $ctcontainer_root/$containername/etc/hosts"
-        sudo cp -f --remove-destination /etc/resolv.conf "$ctcontainer_root/$containername/etc/resolv.conf"
-        set ctcontainer_safety_level 1
+        if [ "$ctcontainer_log_level" = debug ]
+            logger 3 "Outpost deploy has started..."
+            sudo sh -c "echo 'safety:x:1000:1000:safety,,,:/home/safety:/bin/sh' | sudo tee -a $ctcontainer_root/$containername/etc/passwd
+                echo 'safety:x:1000:' | sudo tee -a $ctcontainer_root/$containername/etc/group
+                echo 'safety:!:0:0:99999:7:::' | sudo tee -a $ctcontainer_root/$containername/etc/shadow
+                mkdir -p $ctcontainer_root/$containername/home/safety
+                rm -f $ctcontainer_root/$containername/etc/hostname
+                echo $containername | sudo tee $ctcontainer_root/$containername/etc/hostname
+                echo 127.0.0.1  $containername | sudo tee -a $ctcontainer_root/$containername/etc/hosts
+                cp -f --remove-destination /etc/resolv.conf $ctcontainer_root/$containername/etc/resolv.conf"
+        else
+            sudo sh -c "echo 'safety:x:1000:1000:safety,,,:/home/safety:/bin/sh' | sudo tee -a $ctcontainer_root/$containername/etc/passwd
+                echo 'safety:x:1000:' | sudo tee -a $ctcontainer_root/$containername/etc/group
+                echo 'safety:!:0:0:99999:7:::' | sudo tee -a $ctcontainer_root/$containername/etc/shadow
+                mkdir -p $ctcontainer_root/$containername/home/safety
+                rm -f $ctcontainer_root/$containername/etc/hostname
+                echo $containername | sudo tee $ctcontainer_root/$containername/etc/hostname
+                echo 127.0.0.1  $containername | sudo tee -a $ctcontainer_root/$containername/etc/hosts
+                cp -f --remove-destination /etc/resolv.conf $ctcontainer_root/$containername/etc/resolv.conf" &>/dev/null
+        end
+        set ctcontainer_safety_level 0
         set ctcontainer_auto_umount 1
-        chroot_run $containername /bin/sh -c 'chown -R safety:safety /home/safety & chmod -R 755 /home/safety & passwd -u safety & echo "safety    ALL=(ALL:ALL) ALL" >> tee -a /etc/sudoers & echo "0d7882da60cc3838fabc4efc62908206" > /etc/machine-id' &>/dev/null
-        logger 2 "$container deployed in $ctcontainer_root/$containername"
+        if [ "$ctcontainer_log_level" = debug ]
+            logger 3 "Inner deploy has started..."
+            chroot_run $containername /bin/sh -c '/bin/chown -R safety:safety /home/safety
+                /bin/chmod -R 755 /home/safety & echo "safety    ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers
+                echo "0d7882da60cc3838fabc4efc62908206" | tee /etc/machine-id'
+        else
+            chroot_run $containername /bin/sh -c '/bin/chown -R safety:safety /home/safety
+                /bin/chmod -R 755 /home/safety & echo "safety    ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers
+                echo "0d7882da60cc3838fabc4efc62908206" | tee /etc/machine-id' &>/dev/null
+        end
     else
         logger 5 "Cannot copy the rootfs to root.ctcontainer,checkout the debug info and try to import again"
     end
