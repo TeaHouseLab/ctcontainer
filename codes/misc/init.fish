@@ -60,22 +60,22 @@ function init
         if sudo tar --force-local -xf $container.tar.gz
             if [ "$ctcontainer_log_level" = debug ]
                 logger 3 "Outpost deploy has started..."
-                sudo sh -c "echo 'safety:x:1000:1000:safety,,,:/home/safety:/bin/sh' | sudo tee -a $ctcontainer_root/$containername/etc/passwd
-                    echo 'safety:x:1000:' | sudo tee -a $ctcontainer_root/$containername/etc/group
-                    echo 'safety:!:0:0:99999:7:::' | sudo tee -a $ctcontainer_root/$containername/etc/shadow
+                sudo sh -c "echo 'safety:x:1000:1000:safety,,,:/home/safety:/bin/sh' >> $ctcontainer_root/$containername/etc/passwd
+                    echo 'safety:x:1000:' >> $ctcontainer_root/$containername/etc/group
+                    echo 'safety:!:0:0:99999:7:::' >> $ctcontainer_root/$containername/etc/shadow
                     mkdir -p $ctcontainer_root/$containername/home/safety
                     rm -f $ctcontainer_root/$containername/etc/hostname
-                    echo $containername | sudo tee $ctcontainer_root/$containername/etc/hostname
-                    echo 127.0.0.1  $containername | sudo tee -a $ctcontainer_root/$containername/etc/hosts
+                    echo $containername > $ctcontainer_root/$containername/etc/hostname
+                    echo 127.0.0.1  $containername >> $ctcontainer_root/$containername/etc/hosts
                     cp -f --remove-destination /etc/resolv.conf $ctcontainer_root/$containername/etc/resolv.conf"
             else
-                sudo sh -c "echo 'safety:x:1000:1000:safety,,,:/home/safety:/bin/sh' | sudo tee -a $ctcontainer_root/$containername/etc/passwd
-                    echo 'safety:x:1000:' | sudo tee -a $ctcontainer_root/$containername/etc/group
-                    echo 'safety:!:0:0:99999:7:::' | sudo tee -a $ctcontainer_root/$containername/etc/shadow
+                sudo sh -c "echo 'safety:x:1000:1000:safety,,,:/home/safety:/bin/sh' >> $ctcontainer_root/$containername/etc/passwd
+                    echo 'safety:x:1000:' >> $ctcontainer_root/$containername/etc/group
+                    echo 'safety:!:0:0:99999:7:::' >> $ctcontainer_root/$containername/etc/shadow
                     mkdir -p $ctcontainer_root/$containername/home/safety
                     rm -f $ctcontainer_root/$containername/etc/hostname
-                    echo $containername | sudo tee $ctcontainer_root/$containername/etc/hostname
-                    echo 127.0.0.1  $containername | sudo tee -a $ctcontainer_root/$containername/etc/hosts
+                    echo $containername > $ctcontainer_root/$containername/etc/hostname
+                    echo 127.0.0.1  $containername >> $ctcontainer_root/$containername/etc/hosts
                     cp -f --remove-destination /etc/resolv.conf $ctcontainer_root/$containername/etc/resolv.conf" &>/dev/null
             end
             set ctcontainer_safety_level 0
@@ -83,12 +83,14 @@ function init
             if [ "$ctcontainer_log_level" = debug ]
                 logger 3 "Inner deploy has started..."
                 chroot_run $containername /bin/sh -c '/bin/chown -R safety:safety /home/safety
-                    /bin/chmod -R 755 /home/safety & echo "safety    ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers
-                    echo "0d7882da60cc3838fabc4efc62908206" | tee /etc/machine-id'
+                    /bin/chmod -R 755 /home/safety & echo "safety    ALL=(ALL:ALL) ALL" >> /etc/sudoers
+                    echo "0d7882da60cc3838fabc4efc62908206" > /etc/machine-id
+                    (crontab -l 2>/dev/null; echo @reboot ip link set host0 name eth0) | crontab -'
             else
                 chroot_run $containername /bin/sh -c '/bin/chown -R safety:safety /home/safety
-                    /bin/chmod -R 755 /home/safety & echo "safety    ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers
-                    echo "0d7882da60cc3838fabc4efc62908206" | tee /etc/machine-id' &>/dev/null
+                    /bin/chmod -R 755 /home/safety & echo "safety    ALL=(ALL:ALL) ALL" >> /etc/sudoers
+                    echo "0d7882da60cc3838fabc4efc62908206" > /etc/machine-id
+                    (crontab -l 2>/dev/null; echo @reboot ip link set host0 name eth0) | crontab -' &>/dev/null
             end
             sudo rm $ctcontainer_root/$containername/$container.tar.gz
             logger 2 "$container deployed in $ctcontainer_root/$containername, remember to change the password of root and safety account(run with -p0 and -bchroot flag to enter chroot with root account and zero restriction)"
