@@ -433,7 +433,7 @@ function init
         if sudo tar --force-local -xf $container.tar.gz
             sudo sh -c "echo 'safety:x:1000:1000:safety,,,:/home/safety:/bin/sh' >> $ctcontainer_root/$containername/etc/passwd & echo 'safety:x:1000:' >> $ctcontainer_root/$containername/etc/group & echo 'safety:!:18986:0:99999:7:::' >> $ctcontainer_root/$containername/etc/shadow & mkdir -p $ctcontainer_root/$containername/home/safety & rm $ctcontainer_root/$containername/etc/hostname & echo $containername > $ctcontainer_root/$containername/etc/hostname & echo 127.0.0.1  $containername >> $ctcontainer_root/$containername/etc/hosts"
             sudo cp -f --remove-destination /etc/resolv.conf "$ctcontainer_root/$containername/etc/resolv.conf"
-            set ctcontainer_safety_level 1
+            set ctcontainer_safety_level 0
             set ctcontainer_auto_umount 1
             chroot_run $containername /bin/sh -c 'chown -R safety:safety /home/safety & chmod -R 755 /home/safety & echo "safety    ALL=(ALL:ALL) ALL" >> tee -a /etc/sudoers & echo "0d7882da60cc3838fabc4efc62908206" > /etc/machine-id' &>/dev/null
             sudo rm $ctcontainer_root/$containername/$container.tar.gz
@@ -680,7 +680,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-07-14_07:26:54
+echo Build_Time_UTC=2022-07-15_02:45:10
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
