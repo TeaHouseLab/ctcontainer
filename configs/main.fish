@@ -75,22 +75,28 @@ switch $argv[1]
     case run
         switch $ctcontainer_backend
             case chroot
-                chroot_run $argv[2] $argv[3..-1]
+                chroot_run $argv[2..-1]
             case nspawn
-                nspawn_run $argv[2] $argv[3..-1]
+                nspawn_run $argv[2..-1]
+            case '*'
+                logger 5 "Unknown backend $ctcontainer_backend, abort"
+                exit 128
         end
     case load
         set ctload true
         switch $ctcontainer_backend
             case chroot
-                chroot_run $argv[2] $argv[3..-1]
+                chroot_run $argv[2..-1]
             case nspawn
-                nspawn_run $argv[2] $argv[3..-1]
+                nspawn_run $argv[2..-1]
+            case '*'
+                logger 5 "Unknown backend $ctcontainer_backend, abort"
+                exit 128
         end
     case list
         list $argv[2..-1]
     case v version
-        logger 1 "Hairpin@build4"
+        logger 1 "Hairpin@build5"
     case install
         install ctcontainer
     case uninstall

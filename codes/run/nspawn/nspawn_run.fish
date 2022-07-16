@@ -1,4 +1,5 @@
 function nspawn_run
+    argparse -i -n $prefix 'o/port=' -- $argv
     set -lx container $argv[1]
     if [ "$ctload" = true ]
         cd (dirname $argv[1])
@@ -24,7 +25,27 @@ function nspawn_run
         case -1
             sudo systemd-nspawn --resolv-conf=off --bind=$ctcontainer_share:/ctcontainer_share -q -u safety -D $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR DISPLAY=:0 HOME=/home/safety USER=safety $argv[2..-1]
         case 0
-            sudo systemd-nspawn --resolv-conf=off -b -n -q -D $container
+            setup_network
+            if set -q _flag_port
+                set port_range $_flag_port
+                if echo $port_range | grep -qs -
+                    set -e port_mapping_tcp
+                    set -e port_mapping_udp
+                    set -e port_mapping
+                    set port_counter 0
+                    for port_arrary in (seq (echo $port_range | awk -F "-" '{print $1}') (echo $port_range | awk -F "-" '{print $2}'))
+                        set port_counter (math $port_counter+1)
+                        set port_mapping_tcp[$port_counter] "-ptcp:$port_arrary"
+                        set port_mapping_udp[$port_counter] "-pudp:$port_arrary"
+                    end
+                else
+                    set port_mapping_tcp "-ptcp:$_flag_port"
+                    set port_mapping_udp "-pudp:$_flag_port"
+                end
+                sudo systemd-nspawn --resolv-conf=off $port_mapping_tcp $port_mapping_udp -bnq -D $container
+            else
+                sudo systemd-nspawn --resolv-conf=off -bnq -D $container
+            end
         case 1
             sudo systemd-nspawn --resolv-conf=off -q -D $container env DISPLAY=:0 $argv[2..-1]
         case 2

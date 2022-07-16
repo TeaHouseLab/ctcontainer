@@ -46,23 +46,27 @@ function help_echo
 (./)app [init, run, load, import, purge, list] argvs
 
     init: Pull a rootfs from cloud repo
-        Example: ctcontainer init debian-stable (-f)
+        Example: ctcontainer init debian:sid:amd64:default (-f)
         Argvs [-f/--forcename, -n/--name]
-        -f/--forcename: Create your container without prefix
-        -n/--name: Create your container with a custom name
-        (Note: If a container already exist, it will directly overwrite it if you specific a name or create it without prefix)
+            -f/--forcename: Create your container without prefix
+            -n/--name: Create your container with a custom name
+            (Note: If a container already exist, it will directly overwrite it if you specific a name or create it without prefix)
 
     run: Run a program in a container
         Example: ctcontainer run archlinux bash
+        Argvs [-o/--port=]
+            -p/--port=: Specific a port or a port range to map to the host machine
+            (Note: Only available on backend=nspawn, safety_level=0)
+
 
     load: Run a program in a container in a rootfs out of ctcontainer root
 
     import: Import a container into ctcontainer root
         Example: ctcontainer import /home/thl/tmp/fedora35 (-f)
         Argvs [-f/--forcename, -n/--name=]
-        -f/--forcename: Create your container without prefix
-        -n/--name=: Create your container with a custom name
-        (Note: If a container already exist, it will directly overwrite it if you specific a name or create it without prefix)
+            -f/--forcename: Create your container without prefix
+            -n/--name=: Create your container with a custom name
+            (Note: If a container already exist, it will directly overwrite it if you specific a name or create it without prefix)
 
     purge: Purge a container from ctcontainer root
 
@@ -72,9 +76,15 @@ function help_echo
         Example3: ctcontainer list available (list available rootfs on cloud repo)
     
     service: Manage a systemd service for nspawn container
-        Argvs: [create, remove, enable, disable] argvs
-        Example1: ctcontainer create/remove alpinelinux centos9 (create/remove service for alpinelinux and centos9)
-        Example2: ctcontainer enable/disable alpinelinux centos9 (start/stop and enable/disable service for alpinelinux and centos9)
+        Argvs: [create, remove, enable, disable, status] argvs
+            create: Create a service for machine
+            remove: Remove a service for machine
+            enable: Start and enable the machine on startup
+            disable: Stop and disable the machine on startup
+            status: Query the status of a machine
+
+            Example1: ctcontainer create/remove alpinelinux centos9 (create/remove service for alpinelinux and centos9)
+            Example2: ctcontainer enable/disable alpinelinux centos9 (start/stop and enable/disable service for alpinelinux and centos9)
 
 Argvs
 (./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level=, -u/--ctauto_umount=, -p/--ctsafety_level=, -b/--ctbackend=, -x/--x11=, -e/--source] commands
@@ -171,6 +181,9 @@ function purge
     for container in $argv[1..-1]
         container_tester $container
         cd $ctcontainer_root
+        if test -e /etc/systemd/system/ctcontainer-$container.service
+            service remove $container
+        end
         if sudo rm -rf -- $container
             logger 2 "$container has been purged"
         else
@@ -336,6 +349,11 @@ WantedBy=multi-user.target" | sudo tee /etc/systemd/system/ctcontainer-$containe
                 else
                     logger 5 "Something went wrong while disabling container $container"
                 end
+            end
+        case status
+            for container in $containers
+                container_tester $container
+                sudo systemctl status ctcontainer-$container
             end
         case '*'
             logger 5 "No option is provided, abort"
@@ -506,6 +524,21 @@ function init
     end
 end
 
+function setup_network
+    if test $ctcontainer_log_level = "debug"
+        logger 3 "Starting Setup Nat network for guest machine"
+    end
+    if systemctl is-active --quiet systemd-networkd
+    else
+        if test (systemctl list-unit-files 'systemd-networkd*' | wc -l) -gt 3 
+            sudo systemctl start systemd-networkd
+        else
+            logger 5 "Unable to setup network for guest machine, please install systemd-networkd on your host machine, abort"
+            exit 128
+        end
+    end
+end
+
 function setup_dir_nspawn
     if test -d $ctcontainer_root/$container/var/run/dbus
     else
@@ -530,6 +563,7 @@ function setup_dir_nspawn
 end
 
 function nspawn_run
+    argparse -i -n $prefix 'o/port=' -- $argv
     set -lx container $argv[1]
     if [ "$ctload" = true ]
         cd (dirname $argv[1])
@@ -555,7 +589,27 @@ function nspawn_run
         case -1
             sudo systemd-nspawn --resolv-conf=off --bind=$ctcontainer_share:/ctcontainer_share -q -u safety -D $container env XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR DISPLAY=:0 HOME=/home/safety USER=safety $argv[2..-1]
         case 0
-            sudo systemd-nspawn --resolv-conf=off -b -n -q -D $container
+            setup_network
+            if set -q _flag_port
+                set port_range $_flag_port
+                if echo $port_range | grep -qs -
+                    set -e port_mapping_tcp
+                    set -e port_mapping_udp
+                    set -e port_mapping
+                    set port_counter 0
+                    for port_arrary in (seq (echo $port_range | awk -F "-" '{print $1}') (echo $port_range | awk -F "-" '{print $2}'))
+                        set port_counter (math $port_counter+1)
+                        set port_mapping_tcp[$port_counter] "-ptcp:$port_arrary"
+                        set port_mapping_udp[$port_counter] "-pudp:$port_arrary"
+                    end
+                else
+                    set port_mapping_tcp "-ptcp:$_flag_port"
+                    set port_mapping_udp "-pudp:$_flag_port"
+                end
+                sudo systemd-nspawn --resolv-conf=off $port_mapping_tcp $port_mapping_udp -bnq -D $container
+            else
+                sudo systemd-nspawn --resolv-conf=off -bnq -D $container
+            end
         case 1
             sudo systemd-nspawn --resolv-conf=off -q -D $container env DISPLAY=:0 $argv[2..-1]
         case 2
@@ -738,7 +792,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-07-15_10:43:46
+echo Build_Time_UTC=2022-07-16_07:02:08
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -816,22 +870,28 @@ switch $argv[1]
     case run
         switch $ctcontainer_backend
             case chroot
-                chroot_run $argv[2] $argv[3..-1]
+                chroot_run $argv[2..-1]
             case nspawn
-                nspawn_run $argv[2] $argv[3..-1]
+                nspawn_run $argv[2..-1]
+            case '*'
+                logger 5 "Unknown backend $ctcontainer_backend, abort"
+                exit 128
         end
     case load
         set ctload true
         switch $ctcontainer_backend
             case chroot
-                chroot_run $argv[2] $argv[3..-1]
+                chroot_run $argv[2..-1]
             case nspawn
-                nspawn_run $argv[2] $argv[3..-1]
+                nspawn_run $argv[2..-1]
+            case '*'
+                logger 5 "Unknown backend $ctcontainer_backend, abort"
+                exit 128
         end
     case list
         list $argv[2..-1]
     case v version
-        logger 1 "Hairpin@build4"
+        logger 1 "Hairpin@build5"
     case install
         install ctcontainer
     case uninstall

@@ -56,6 +56,11 @@ WantedBy=multi-user.target" | sudo tee /etc/systemd/system/ctcontainer-$containe
                     logger 5 "Something went wrong while disabling container $container"
                 end
             end
+        case status
+            for container in $containers
+                container_tester $container
+                sudo systemctl status ctcontainer-$container
+            end
         case '*'
             logger 5 "No option is provided, abort"
             exit 1

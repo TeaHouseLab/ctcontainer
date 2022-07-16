@@ -3,23 +3,27 @@ function help_echo
 (./)app [init, run, load, import, purge, list] argvs
 
     init: Pull a rootfs from cloud repo
-        Example: ctcontainer init debian-stable (-f)
+        Example: ctcontainer init debian:sid:amd64:default (-f)
         Argvs [-f/--forcename, -n/--name]
-        -f/--forcename: Create your container without prefix
-        -n/--name: Create your container with a custom name
-        (Note: If a container already exist, it will directly overwrite it if you specific a name or create it without prefix)
+            -f/--forcename: Create your container without prefix
+            -n/--name: Create your container with a custom name
+            (Note: If a container already exist, it will directly overwrite it if you specific a name or create it without prefix)
 
     run: Run a program in a container
         Example: ctcontainer run archlinux bash
+        Argvs [-o/--port=]
+            -p/--port=: Specific a port or a port range to map to the host machine
+            (Note: Only available on backend=nspawn, safety_level=0)
+
 
     load: Run a program in a container in a rootfs out of ctcontainer root
 
     import: Import a container into ctcontainer root
         Example: ctcontainer import /home/thl/tmp/fedora35 (-f)
         Argvs [-f/--forcename, -n/--name=]
-        -f/--forcename: Create your container without prefix
-        -n/--name=: Create your container with a custom name
-        (Note: If a container already exist, it will directly overwrite it if you specific a name or create it without prefix)
+            -f/--forcename: Create your container without prefix
+            -n/--name=: Create your container with a custom name
+            (Note: If a container already exist, it will directly overwrite it if you specific a name or create it without prefix)
 
     purge: Purge a container from ctcontainer root
 
@@ -29,9 +33,15 @@ function help_echo
         Example3: ctcontainer list available (list available rootfs on cloud repo)
     
     service: Manage a systemd service for nspawn container
-        Argvs: [create, remove, enable, disable] argvs
-        Example1: ctcontainer create/remove alpinelinux centos9 (create/remove service for alpinelinux and centos9)
-        Example2: ctcontainer enable/disable alpinelinux centos9 (start/stop and enable/disable service for alpinelinux and centos9)
+        Argvs: [create, remove, enable, disable, status] argvs
+            create: Create a service for machine
+            remove: Remove a service for machine
+            enable: Start and enable the machine on startup
+            disable: Stop and disable the machine on startup
+            status: Query the status of a machine
+
+            Example1: ctcontainer create/remove alpinelinux centos9 (create/remove service for alpinelinux and centos9)
+            Example2: ctcontainer enable/disable alpinelinux centos9 (start/stop and enable/disable service for alpinelinux and centos9)
 
 Argvs
 (./app) [-r/--ctroot=, -s/--ctshare=, -l/--ctlog_level=, -u/--ctauto_umount=, -p/--ctsafety_level=, -b/--ctbackend=, -x/--x11=, -e/--source] commands
