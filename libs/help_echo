@@ -13,8 +13,9 @@ function help_echo
         Example: ctcontainer run archlinux bash
         Argvs [-o/--port=]
             -p/--port=: Specific a port or a port range to map to the host machine
+            Example1: ctcontainer -p0 -bnspawn run -p22,80,443 voidlinux
+            Example2: ctcontainer -p0 -bnspawn run -p100-200 voidlinux
             (Note: Only available on backend=nspawn, safety_level=0)
-
 
     load: Run a program in a container in a rootfs out of ctcontainer root
 

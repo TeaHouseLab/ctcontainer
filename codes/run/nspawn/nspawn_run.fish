@@ -39,8 +39,20 @@ function nspawn_run
                         set port_mapping_udp[$port_counter] "-pudp:$port_arrary"
                     end
                 else
-                    set port_mapping_tcp "-ptcp:$_flag_port"
-                    set port_mapping_udp "-pudp:$_flag_port"
+                    if echo $port_range | grep -qs ,
+                        set -e port_mapping_tcp
+                        set -e port_mapping_udp
+                        set -e port_mapping
+                        set port_counter 0
+                        for port_arrary in (echo $port_range | string split ,)
+                            set port_counter (math $port_counter+1)
+                            set port_mapping_tcp[$port_counter] "-ptcp:$port_arrary"
+                            set port_mapping_udp[$port_counter] "-pudp:$port_arrary"
+                        end
+                    else
+                        set port_mapping_tcp "-ptcp:$_flag_port"
+                        set port_mapping_udp "-pudp:$_flag_port"
+                    end
                 end
                 sudo systemd-nspawn --resolv-conf=off $port_mapping_tcp $port_mapping_udp -bnq -D $container
             else

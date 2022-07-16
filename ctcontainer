@@ -56,8 +56,9 @@ function help_echo
         Example: ctcontainer run archlinux bash
         Argvs [-o/--port=]
             -p/--port=: Specific a port or a port range to map to the host machine
+            Example1: ctcontainer -p0 -bnspawn run -p22,80,443 voidlinux
+            Example2: ctcontainer -p0 -bnspawn run -p100-200 voidlinux
             (Note: Only available on backend=nspawn, safety_level=0)
-
 
     load: Run a program in a container in a rootfs out of ctcontainer root
 
@@ -616,8 +617,20 @@ function nspawn_run
                         set port_mapping_udp[$port_counter] "-pudp:$port_arrary"
                     end
                 else
-                    set port_mapping_tcp "-ptcp:$_flag_port"
-                    set port_mapping_udp "-pudp:$_flag_port"
+                    if echo $port_range | grep -qs ,
+                        set -e port_mapping_tcp
+                        set -e port_mapping_udp
+                        set -e port_mapping
+                        set port_counter 0
+                        for port_arrary in (echo $port_range | string split ,)
+                            set port_counter (math $port_counter+1)
+                            set port_mapping_tcp[$port_counter] "-ptcp:$port_arrary"
+                            set port_mapping_udp[$port_counter] "-pudp:$port_arrary"
+                        end
+                    else
+                        set port_mapping_tcp "-ptcp:$_flag_port"
+                        set port_mapping_udp "-pudp:$_flag_port"
+                    end
                 end
                 sudo systemd-nspawn --resolv-conf=off $port_mapping_tcp $port_mapping_udp -bnq -D $container
             else
@@ -805,7 +818,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-07-16_09:14:36
+echo Build_Time_UTC=2022-07-16_12:00:40
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -904,7 +917,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 1 "Hairpin@build5"
+        logger 1 "Hairpin@build6"
     case install
         install ctcontainer
     case uninstall

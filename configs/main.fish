@@ -96,7 +96,7 @@ switch $argv[1]
     case list
         list $argv[2..-1]
     case v version
-        logger 1 "Hairpin@build5"
+        logger 1 "Hairpin@build6"
     case install
         install ctcontainer
     case uninstall
