@@ -178,9 +178,22 @@ function configure
     sed -n "/$argv[1]=/"p "$argv[2]" | sed "s/$argv[1]=//g"
 end
 function purge
+    set -lx container
     for container in $argv[1..-1]
         container_tester $container
         cd $ctcontainer_root
+        if grep -qs "$ctcontainer_root/$container" /proc/mounts
+            logger 3 "A container is running, Umount and purge it?[y/n]"
+            read -n1 -P "$prefix >>> " _purge_
+            switch $_purge_
+                case y Y
+                    set ctcontainer_auto_umount 1
+                    essential_umount
+                case n N '*'
+                    logger 1 Abort
+                    exit
+            end
+        end
         if test -e /etc/systemd/system/ctcontainer-$container.service
             service remove $container
         end
@@ -792,7 +805,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-07-16_07:02:08
+echo Build_Time_UTC=2022-07-16_09:14:36
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
