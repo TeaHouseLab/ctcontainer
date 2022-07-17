@@ -818,7 +818,7 @@ function setup_dbus
     end
 end
 
-echo Build_Time_UTC=2022-07-17_08:36:07
+echo Build_Time_UTC=2022-07-17_08:37:01
 set -lx prefix [ctcontainer]
 set -lx ctcontainer_root /opt/ctcontainer
 set -lx ctcontainer_share $HOME/ctcontainer_share
@@ -828,7 +828,7 @@ set -lx ctcontainer_safety_level 1
 set -lx ctcontainer_auto_umount 1
 set -lx ctcontainer_x11 xhost
 set -lx ctcontainer_source "https://us.lxd.images.canonical.com"
-checkdependence file curl jq
+checkdependence file curl jq sudo
 if test -d /etc/centerlinux/conf.d/
 else
     sudo mkdir -p /etc/centerlinux/conf.d/
